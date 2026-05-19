@@ -1,0 +1,1933 @@
+---
+title: "Plots and stats Groups 1-3"
+author: 
+date: 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Load packages
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(scales)
+library(patchwork)
+library(readr)
+library(lme4)
+library(multcomp)
+library(emmeans)
+library(MuMIn)
+library(emdist)
+library(vegan)
+library(introdataviz)
+library(grid)
+```
+
+
+
+
+#Calculate global threshold
+```{r}
+#Be sure to run Global threshold calculations pt1 - pt3 in the Retaliation detect and stats 2021, 2022G1, and 2022G2 dfs before running this data chunk
+
+#Combine each time between events df frorm each social group
+combined_data <- rbind(time_between_events1, time_between_events2, time_between_events3)
+
+# Compute quantiles (95th, 75th, and 50th percentiles) of the time between events
+quantiles <- quantile(combined_data$time_to_retal, probs = c(0.95, 0.75, 0.50), na.rm = TRUE)
+
+# Display result
+print(quantiles)
+#95%     75%     50% 
+#1363.15  413.75  138.00 
+```
+
+
+#Calculate Thresholds for Retaliation
+```{r}
+#Be sure to run the retaliation motif speed calculations pt1 - pt3 in the Retaliation detect and stats 2021, 2022G1, and 2022G2 dfs before running this data chunk
+head(retal_length_ready_2021)
+head(retal_length_ready2022G2)
+
+#bind retal dfs and calculate mean retaliation speed
+retal_length_comb <- rbind(retal_length_ready_2021, retal_length_ready2022G2)
+retal_length_comb$time_to_retal <- as.numeric(retal_length_comb$time_to_retal)
+retal_mean <- mean(retal_length_comb$time_to_retal) %>% 
+round()
+
+retal_mean
+
+#Compute quantiles (95th, 75th, and 50th percentiles) of retaliation speed
+ quantile(retal_length_comb$time_to_retal, probs = c(0.25, 0.5, 0.75, .95))
+
+```
+
+
+
+#Calculate Thresholds for Pile-on
+```{r}
+#Be sure to run the pile-on motif speed calculations pt1 - pt3 in the Pileon detect and stats 2021, 2022G1, and 2022G2 dfs before running this data chunk
+head(pile_length_ready_2021)
+head(pile_length_ready_2022G1)
+head(pile_length_ready_2022G2)
+
+
+#bind pile-on dfs and calculate mean pile-on speed
+pile_length_comb <- rbind(pile_length_ready_2021, pile_length_ready_2022G1,pile_length_ready_2022G2)
+pile_length_comb$time_to_pile <- as.numeric(pile_length_comb$time_to_pile)
+pile_mean <- mean(pile_length_comb$time_to_pile) %>% 
+round()
+
+pile_mean
+
+#Compute quantiles (95th, 75th, and 50th percentiles) of pileon speed
+ quantile(pile_length_comb$time_to_pile, probs = c(0.25, 0.5, 0.75,.95))
+```
+
+
+#Calculate Thresholds for Pass-along
+```{r}
+#Be sure to run the pass-along motif speed calculations pt1 - pt3 in the Passalong detect and stats 2021, 2022G1, and 2022G2 dfs before running this data chunk
+head(pass_length_ready)
+head(pass_length_ready_2022G1)
+head(pass_length_ready_2022G2)
+
+#bind pass-along dfs and calculate mean pass-along speed
+pass_length_comb <- rbind(pass_length_ready,pass_length_ready_2022G1,pass_length_ready_2022G2)
+pass_length_comb$time_to_pass <- as.numeric(pass_length_comb$time_to_pass)
+
+pass_mean <- mean(pass_length_comb$time_to_pass) %>% 
+round()
+
+pass_mean
+
+#Compute quantiles (95th, 75th, and 50th percentiles) of pass-along speed
+ quantile(pass_length_comb$time_to_pass, probs = c(0.25, 0.5, 0.75, 0.95))
+
+```
+
+
+#Calculate Thresholds for Opportunism
+```{r}
+#Be sure to run the opportunism motif speed calculations pt1 - pt3 in the Opportunism detect and stats 2021, 2022G1, and 2022G2 dfs before running this data chunk
+head(opp_length_ready_2021)
+head(opp_length_ready_2022G1)
+head(opp_length_ready_2022G2)
+
+
+#bind opportunism dfs and calculate mean opportunism speed
+opp_length_comb <- rbind(opp_length_ready_2021,opp_length_ready_2022G1,opp_length_ready_2022G2)
+opp_length_comb$time_to_opp <- as.numeric(opp_length_comb$time_to_opp)
+
+opp_mean <- mean(opp_length_comb$time_to_opp) %>% 
+round()
+
+opp_mean
+
+#Compute quantiles (95th, 75th, and 50th percentiles) of opportunism speed
+ quantile(opp_length_comb$time_to_opp, probs = c(0.25, 0.5, 0.75, 0.95))
+
+```
+
+
+
+#Calculate Thresholds for Punishment
+```{r}
+#Be sure to run the punishment motif speed calculations pt1 - pt3 in the Punishment detect and stats 2021, 2022G1, and 2022G2 dfs before running this data chunk
+head(pun_length_ready_2021)
+head(pun_length_ready_2022G1)
+head(pun_length_ready_2022G2)
+
+
+#bind punishment dfs and calculate mean punishment speed
+pun_length_comb <- rbind(pun_length_ready_2021,pun_length_ready_2022G1,pun_length_ready_2022G2)
+pun_length_comb$time_to_pun <- as.numeric(pun_length_comb$time_to_pun)
+
+pun_mean <- mean(pun_length_comb$time_to_pun) %>% 
+round()
+
+pun_mean
+
+#Compute quantiles (95th, 75th, and 50th percentiles) of punishment speed
+ quantile(pun_length_comb$time_to_pun, probs = c(0.25, 0.5, 0.75, 0.95))
+
+```
+
+
+#Boxplot to compare motif speed across rules for each group
+```{r}
+#If not using provided df (rules.length.data.frame.csv) be sure to run up to randomize motif speed code block in each rules script
+
+head (retal_length_ready_2021)
+head(pass_length_ready)
+head(pile_length_ready_2021)
+head(pun_length_ready_2021)
+head(opp_length_ready_2021)
+
+
+
+
+#add rule type column and standardize column name for all datasets
+#could use a loop but here we execute this one by one to keep a close eye on the process 
+
+#group 1
+retal_comb <- mutate(retal_length_ready_2021, rule_type = "Retaliation", rule_time = retal_length_ready_2021$time_to_retal, Group = "1")
+
+retal_comb_sub <- subset(retal_comb, select = c(rule_type, rule_time, Group))
+
+
+
+pass_comb <- mutate(pass_length_ready, rule_type = "Pass-along", rule_time = pass_length_ready$time_to_pass, Group = "1")
+
+pass_comb_sub <- subset(pass_comb, select = c(rule_type, rule_time, Group))
+
+
+
+pile_comb <- mutate(pile_length_ready_2021, rule_type = "Pile-on", rule_time = pile_length_ready_2021$time_to_pile, Group = "1")
+
+pile_comb_sub <- subset(pile_comb, select = c(rule_type, rule_time, Group))
+
+
+pun_comb <- mutate(pun_length_ready_2021, rule_type = "Punishment", rule_time = pun_length_ready_2021$time_to_pun, Group = "1")
+
+pun_comb_sub <- subset(pun_comb, select = c(rule_type, rule_time, Group))
+
+
+
+opp_comb <- mutate(opp_length_ready_2021, rule_type = "Opportunism", rule_time = opp_length_ready_2021$time_to_opp, Group = "1")
+
+opp_comb_sub <- subset(opp_comb, select = c(rule_type, rule_time, Group))
+
+
+
+#group 2
+
+retal_comb_2022G1 <- mutate(retal_length_ready2022G1, rule_type = "Retaliation", rule_time = retal_length_ready2022G1$time_to_retal, Group = "2")
+
+retal_comb_2022G1_sub <- subset(retal_comb_2022G1, select = c(rule_type, rule_time, Group))
+
+
+
+pass_comb_2022G1 <- mutate(pass_length_ready_2022G1, rule_type = "Pass-along", rule_time = pass_length_ready_2022G1$time_to_pass, Group = "2")
+
+pass_comb_2022G1_sub <- subset(pass_comb_2022G1, select = c(rule_type, rule_time, Group))
+
+
+
+pile_comb_2022G1 <- mutate(pile_length_2022G1, rule_type = "Pile-on", rule_time = pile_length_2022G1$time_to_pile, Group = "2")
+
+pile_comb_2022G1_sub <- subset(pile_comb_2022G1, select = c(rule_type, rule_time, Group))
+
+
+pun_comb_2022G1 <- mutate(pun_length_ready_2022G1, rule_type = "Punishment", rule_time = pun_length_ready_2022G1$time_to_pun, Group = "2")
+
+pun_comb_2022G1_sub <- subset(pun_comb_2022G1, select = c(rule_type, rule_time, Group))
+
+
+
+opp_comb_2022G1 <- mutate(opp_length_ready_2022G1, rule_type = "Opportunism", rule_time = opp_length_ready_2022G1$time_to_opp, Group = "2")
+
+opp_comb_2022G1_sub <- subset(opp_comb_2022G1, select = c(rule_type, rule_time, Group))
+
+
+
+#Group 3
+retal_comb_2022G2 <- mutate(retal_length_ready2022G2, rule_type = "Retaliation", rule_time = retal_length_ready2022G2$time_to_retal, Group = "3")
+
+retal_comb_2022G2_sub <- subset(retal_comb_2022G2, select = c(rule_type, rule_time, Group))
+
+
+
+pass_comb_2022G2 <- mutate(pass_length_ready_2022G2, rule_type = "Pass-along", rule_time = pass_length_ready_2022G2$time_to_pass, Group = "3")
+
+pass_comb_2022G2_sub <- subset(pass_comb_2022G2, select = c(rule_type, rule_time, Group))
+
+
+
+pile_comb_2022G2 <- mutate(pile_length_2022G2, rule_type = "Pile-on", rule_time = pile_length_2022G2$time_to_pile, Group = "3")
+
+pile_comb_2022G2_sub <- subset(pile_comb_2022G2, select = c(rule_type, rule_time, Group))
+
+
+pun_comb_2022G2 <- mutate(pun_length_ready_2022G2, rule_type = "Punishment", rule_time = pun_length_ready_2022G2$time_to_pun, Group = "3")
+
+pun_comb_2022G2_sub <- subset(pun_comb_2022G2, select = c(rule_type, rule_time, Group))
+
+
+
+opp_comb_2022G2 <- mutate(opp_length_ready_2022G2, rule_type = "Opportunism", rule_time = opp_length_ready_2022G2$time_to_opp, Group = "3")
+
+opp_comb_2022G2_sub <- subset(opp_comb_2022G2, select = c(rule_type, rule_time, Group))
+
+
+
+
+
+#bind all dfs together
+rules.length.data.frame <- rbind(retal_comb_sub, pile_comb_sub, pass_comb_sub, pun_comb_sub, opp_comb_sub, retal_comb_2022G1_sub, pile_comb_2022G1_sub, pass_comb_2022G1_sub, pun_comb_2022G1_sub, opp_comb_2022G1_sub, retal_comb_2022G2_sub, pile_comb_2022G2_sub, pass_comb_2022G2_sub, pun_comb_2022G2_sub, opp_comb_2022G2_sub) 
+head(rules.length.data.frame)
+
+#Ensure that the time to execute each rules motif is numeric
+rules.length.data.frame$rule_time <- as.numeric(rules.length.data.frame$rule_time)
+
+#write.csv(rules.length.data.frame, "rules.length.data.frame.csv", row.names = FALSE)
+
+
+
+
+rules.length.data.frame <- read_csv("rules.length.data.frame.csv")
+
+
+
+
+#group 2 has 0 retaliations so here we add a 0 row manually
+#subset for the columns of interest
+rules.length.data.frame <- subset(rules.length.data.frame, select = c("rule_type", "rule_time", "Group"))
+
+#bind "0 retaliation" df onto the main df
+rules.length.data.frame <- rbind(rules.length.data.frame, data.frame(rule_type = "Retaliation", rule_time = 0, Group = 2))
+
+
+#ensure that group number is a factor
+rules.length.data.frame$Group<- as.character( rules.length.data.frame$Group)
+
+
+
+
+
+
+#plot boxplot of comparisons of rule's motif speeds for all 3 groups
+motif_speed_boxplot <- ggplot(rules.length.data.frame,aes(x =rule_type, y = rule_time, fill = Group)) + 
+      stat_boxplot(geom = "errorbar") +
+
+  geom_boxplot(show.legend = FALSE) + 
+  scale_x_discrete(limits=c("Retaliation", "Pile-on", "Pass-along", "Opportunism" , "Punishment")) + 
+  labs(x="Time Dependent Rule Sequence", y="Sequence speed (s)") +
+  theme(legend.position = "none")  +
+  scale_fill_brewer(palette = "Set2") +
+  scale_color_brewer(palette = "Set2")  + 
+    coord_cartesian(ylim = c(0, 2750)) + scale_y_continuous(breaks = seq(0, 2750, 300)) + theme_minimal(base_size = 15)
+
+
+motif_speed_boxplot
+
+
+```
+
+
+#Comparisons of motif speed between rules and across groups via GLMM and EMD 
+##Group 1
+```{r}
+#GLMM and EMD
+library(multcomp)
+library(emmeans)
+library(MuMIn)
+
+
+#If not using provided df (rules.length.data.frame_MM_2021.csv) be sure to run the Boxplot to compare motif speed across rules for each group code block above first, as well as through the Earth Movers Distance Calculation code block in each of the rule's scripts
+
+
+
+
+#Group 1
+
+#could use a loop but here we execute this one by one to keep a close eye on the process 
+#prepare dfs for mixed model by standardizing columns
+retal_comb_ready_for_mm_2021 <- subset(retal_comb, select = c(actor, subject, actor_2, subject_2, rule_type, rule_time, date_period, Group)) 
+pile_comb_ready_for_mm_2021 <- subset(pile_comb, select = c(actor, subject, actor_2, subject_2, rule_type, rule_time, date_period, Group)) 
+pass_comb_ready_for_mm_2021 <- subset(pass_comb, select = c(actor, subject, actor_2, subject_2,  rule_type, rule_time, date_period, Group)) 
+opp_comb_ready_for_mm_2021 <- subset(opp_comb, select = c(actor, subject, actor_2, subject_2,  rule_type, rule_time, date_period, Group)) 
+pun_comb_ready_for_mm_2021 <- subset(pun_comb, select = c(actor, subject, actor_2, subject_2,  rule_type, rule_time, date_period, Group)) 
+
+
+
+
+#combine dfs for mixed model and make sure rule time is numeric
+rules.length.data.frame_MM_2021 <- rbind(retal_comb_ready_for_mm_2021, pile_comb_ready_for_mm_2021, pass_comb_ready_for_mm_2021, opp_comb_ready_for_mm_2021, pun_comb_ready_for_mm_2021)
+rules.length.data.frame_MM_2021$rule_time <- as.numeric(rules.length.data.frame_MM_2021$rule_time )
+
+
+
+#write.csv(rules.length.data.frame_MM_2021, "rules.length.data.frame_MM_2021.csv", row.names = FALSE)
+
+
+
+
+rules.length.data.frame_MM_2021 <- read_csv("rules.length.data.frame_MM_2021.csv")
+
+
+
+#compare motif speed via mixed model
+obs_time_mod_2021 <- glmer(rule_time ~ rule_type + (1 | date_period)   + (1|subject)  , data = rules.length.data.frame_MM_2021 , control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun=2e5)), family = Gamma(link = "log"))
+
+summary_obs_time_mod_2021 <- summary(obs_time_mod_2021)
+
+summary_obs_time_mod_2021
+
+#CIs for base model
+ci_model <- confint(obs_time_mod_2021, method = "Wald")
+ci_model
+
+#calculate r squared value
+library(MuMIn)
+r.squaredGLMM(obs_time_mod_2021)
+
+#post hoc multiple comparisons
+posthoc_2021 <- glht(obs_time_mod_2021, linfct = mcp(rule_type = "Tukey"))
+summary(posthoc_2021)
+
+#CIs for post hoc comparisons
+ci_tukey <- confint(posthoc_2021)
+ci_tukey
+
+
+
+
+
+
+
+#Calculate earth movers distance between each rules motif speed distributions for each group
+
+#EMD ret = retaliation
+#pile = pile-on
+#pass = pass-along 
+#opp = opportunism
+#pun = punishment
+
+emd_ret_vs_pile_2021 <- emdist::emd(summary.pile_length_ready_2021_density_no_count_reordered_mat, summary.retal_length_ready_2021_density_no_count_reordered_mat)  
+emd_ret_vs_pile_2021
+
+
+
+emd_ret_vs_pass_2021 <- emdist::emd(summary.pass_length_ready_2021_density_no_count_reordered_mat, summary.retal_length_ready_2021_density_no_count_reordered_mat)  
+emd_ret_vs_pass_2021
+
+
+emd_ret_vs_opp_2021 <- emdist::emd(summary.opp_length_ready_2021_density_no_count_reordered_mat, summary.retal_length_ready_2021_density_no_count_reordered_mat)  
+emd_ret_vs_opp_2021
+
+
+emd_ret_vs_pun_2021 <- emdist::emd(summary.pun_length_ready_2021_density_no_count_reordered_mat, summary.retal_length_ready_2021_density_no_count_reordered_mat)  
+emd_ret_vs_pun_2021
+
+
+emd_pile_vs_pass_2021 <- emdist::emd(summary.pile_length_ready_2021_density_no_count_reordered_mat, summary.pass_length_ready_2021_density_no_count_reordered_mat)
+emd_pile_vs_pass_2021
+
+
+emd_pile_vs_opp_2021 <- emdist::emd(summary.pile_length_ready_2021_density_no_count_reordered_mat, summary.opp_length_ready_2021_density_no_count_reordered_mat)
+emd_pile_vs_opp_2021
+
+
+emd_pile_vs_pun_2021 <- emdist::emd(summary.pile_length_ready_2021_density_no_count_reordered_mat, summary.pun_length_ready_2021_density_no_count_reordered_mat)
+emd_pile_vs_pun_2021
+
+
+emd_pass_vs_opp_2021 <- emdist::emd(summary.pass_length_ready_2021_density_no_count_reordered_mat, summary.opp_length_ready_2021_density_no_count_reordered_mat)
+emd_pass_vs_opp_2021
+
+
+emd_pass_vs_pun_2021 <- emdist::emd(summary.pass_length_ready_2021_density_no_count_reordered_mat, summary.pun_length_ready_2021_density_no_count_reordered_mat)
+emd_pass_vs_pun_2021
+
+
+emd_opp_vs_pun_2021 <- emdist::emd(summary.opp_length_ready_2021_density_no_count_reordered_mat, summary.pun_length_ready_2021_density_no_count_reordered_mat)
+emd_opp_vs_pun_2021
+
+#Combine EMD comparisons
+emd_2021_all <- c(emd_pass_vs_opp_2021, emd_pile_vs_opp_2021, emd_opp_vs_pun_2021,  emd_ret_vs_opp_2021, emd_pile_vs_pass_2021, emd_pass_vs_pun_2021, emd_ret_vs_pass_2021, emd_pile_vs_pun_2021, emd_ret_vs_pile_2021, emd_ret_vs_pun_2021)
+
+
+#calculate the mean motif speed for each rule
+mean_rule_time_2021_summary <- rules.length.data.frame_MM_2021 %>% group_by(rule_type) %>%
+  dplyr::summarize (mean(rule_time))
+mean_rule_time_2021_summary
+```
+
+##Group 2
+```{r}
+#GLMM and EMD
+ library(multcomp)
+
+
+
+
+#If not using provided df (rules.length.data.frame_MM_2022G1.csv) be sure to run the Boxplot to compare motif speed across rules for each group code block above first, as well as through the Earth Movers Distance Calculation code block in each of the rule's scripts
+
+
+
+#Group 2
+
+
+#prepare dfs for mixed model
+#could use a loop but here we execute this one by one to keep a close eye on the process 
+#prepare dfs for mixed model by standardizing columns
+
+
+#Retaliation was not detected in group 2
+
+#retal_comb_ready_for_mm_2022G1 <- subset(retal_comb_2022G1, select = c(actor, subject, actor_2, rule_type, rule_time, date_period, Group)) 
+pile_comb_ready_for_mm_2022G1 <- subset(pile_comb_2022G1, select = c(actor, subject, actor_2, subject_2, rule_type, rule_time, date_period, Group)) 
+pass_comb_ready_for_mm_2022G1 <- subset(pass_comb_2022G1, select = c(actor, subject, actor_2, subject_2, rule_type, rule_time, date_period, Group)) 
+opp_comb_ready_for_mm_2022G1 <- subset(opp_comb_2022G1, select = c(actor, subject, actor_2,  subject_2, rule_type, rule_time, date_period, Group)) 
+pun_comb_ready_for_mm_2022G1 <- subset(pun_comb_2022G1, select = c(actor, subject, actor_2, subject_2, rule_type, rule_time, date_period, Group)) 
+
+
+
+
+#combine dfs for mixed model and make sure rule time is numeric
+rules.length.data.frame_MM_2022G1 <- rbind( pile_comb_ready_for_mm_2022G1, pass_comb_ready_for_mm_2022G1, opp_comb_ready_for_mm_2022G1, pun_comb_ready_for_mm_2022G1)
+rules.length.data.frame_MM_2022G1$rule_time <- as.numeric(rules.length.data.frame_MM_2022G1$rule_time )
+
+
+#write.csv(rules.length.data.frame_MM_2022G1, "rules.length.data.frame_MM_2022G1.csv", row.names = FALSE)
+
+
+
+
+rules.length.data.frame_MM_2022G1 <- read_csv("rules.length.data.frame_MM_2022G1.csv")
+
+
+
+
+
+
+
+
+#compare motif speed via mixed model
+obs_time_mod_2022G1 <- glmer(rule_time ~ rule_type + (1 | date_period)     , data = rules.length.data.frame_MM_2022G1 , control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun=2e5)), family = Gamma(link = "log"))
+
+summary_obs_time_mod_2022G1 <- summary(obs_time_mod_2022G1)
+
+summary_obs_time_mod_2022G1
+
+#CIs for base model
+ci_model <- confint(obs_time_mod_2022G1, method = "Wald")
+ci_model
+
+#calculate r squared
+r.squaredGLMM(obs_time_mod_2022G1)
+
+#post hoc multiple comparisons
+posthoc_2022G1 <- glht(obs_time_mod_2022G1, linfct = mcp(rule_type = "Tukey"))
+summary(posthoc_2022G1)
+
+#CIs for post hoc comparisons
+ci_tukey <- confint(posthoc_2022G1)
+ci_tukey
+
+
+
+
+#Calculate earth movers distance between each rules motif speed distributions for each group
+
+#EMD ret = retaliation
+#pile = pile-on
+#pass = pass-along 
+#opp = opportunism
+#pun = punishment
+
+
+
+#EMD ret pile pass opp pun
+#emd_ret_vs_pile_2022G1 <- emdist::emd(summary.pile_length_ready_2021_density_no_count_reordered_mat, summary.retal_length_ready_2021_density_no_count_reordered_mat)  
+#emd_ret_vs_pile_2022G1
+#
+
+
+
+#emd_ret_vs_pass_2022G1 <- emdist::emd(summary.pass_length_ready_2021_density_no_count_reordered_mat, summary.retal_length_ready_2021_density_no_count_reordered_mat)  
+#emd_ret_vs_pass_2022G1
+#
+
+#emd_ret_vs_opp_2022G1 <- emdist::emd(summary.opp_length_ready_2021_density_no_count_reordered_mat, summary.retal_length_ready_2021_density_no_count_reordered_mat)  
+#emd_ret_vs_opp_2022G1
+#
+
+#emd_ret_vs_pun_2022G1 <- emdist::emd(summary.pun_length_ready_2021_density_no_count_reordered_mat, summary.retal_length_ready_2021_density_no_count_reordered_mat)  
+#emd_ret_vs_pun_2022G1
+#
+
+
+emd_pile_vs_pass_2022G1 <- emdist::emd(summary.pile_length_ready_2022G1_density_no_count_reordered_mat, summary.pass_length_ready_2022G1_density_no_count_reordered_mat)
+emd_pile_vs_pass_2022G1
+
+
+emd_pile_vs_opp_2022G1 <- emdist::emd(summary.pile_length_ready_2022G1_density_no_count_reordered_mat, summary.opp_length_ready_2022G1_density_no_count_reordered_mat)
+emd_pile_vs_opp_2022G1
+
+
+
+emd_pile_vs_pun_2022G1 <- emdist::emd(summary.pile_length_ready_2022G1_density_no_count_reordered_mat, summary.pun_length_ready_2022G1_density_no_count_reordered_mat)
+emd_pile_vs_pun_2022G1
+
+
+emd_pass_vs_opp_2022G1 <- emdist::emd(summary.pass_length_ready_2022G1_density_no_count_reordered_mat, summary.opp_length_ready_2022G1_density_no_count_reordered_mat)
+emd_pass_vs_opp_2022G1
+
+
+emd_pass_vs_pun_2022G1 <- emdist::emd(summary.pass_length_ready_2022G1_density_no_count_reordered_mat, summary.pun_length_ready_2022G1_density_no_count_reordered_mat)
+emd_pass_vs_pun_2022G1
+
+
+emd_opp_vs_pun_2022G1 <- emdist::emd(summary.opp_length_ready_2022G1_density_no_count_reordered_mat, summary.pun_length_ready_2022G1_density_no_count_reordered_mat)
+emd_opp_vs_pun_2022G1
+
+
+
+
+#Combine EMD comparisons
+emd_2022G1_all <- c(emd_pass_vs_opp_2022G1, emd_pile_vs_opp_2022G1, emd_opp_vs_pun_2022G1, emd_pile_vs_pass_2022G1, emd_pass_vs_pun_2022G1,  emd_pile_vs_pun_2022G1)
+
+
+
+#calculate the mean motif speed for each rule
+mean_rule_time_2022G1_summary <- rules.length.data.frame_MM_2022G1 %>% group_by(rule_type) %>%
+  dplyr::summarize (mean(rule_time))
+mean_rule_time_2022G1_summary
+
+```
+
+
+##Group 3
+```{r}
+#GLMM and EMD
+ library(multcomp)
+
+
+
+#If not using provided df (rules.length.data.frame_MM_2022G2.csv) be sure to run the Boxplot to compare motif speed across rules for each group code block above first, as well as through the Earth Movers Distance Calculation code block in each of the rule's scripts
+
+
+
+#Group 3
+
+
+
+#prepare dfs for mixed model
+#could use a loop but here we execute this one by one to keep a close eye on the process 
+#prepare dfs for mixed model by standardizing columns
+retal_comb_ready_for_mm_2022G2 <- subset(retal_comb_2022G2, select = c(actor, subject, actor_2, subject_2, rule_type, rule_time, date_period, Group)) 
+pile_comb_ready_for_mm_2022G2 <- subset(pile_comb_2022G2, select = c(actor, subject, actor_2, subject_2, rule_type, rule_time, date_period, Group)) 
+pass_comb_ready_for_mm_2022G2 <- subset(pass_comb_2022G2, select = c(actor, subject, actor_2, subject_2, rule_type, rule_time, date_period, Group)) 
+opp_comb_ready_for_mm_2022G2 <- subset(opp_comb_2022G2, select = c(actor, subject, actor_2,  subject_2, rule_type, rule_time, date_period, Group)) 
+pun_comb_ready_for_mm_2022G2 <- subset(pun_comb_2022G2, select = c(actor, subject, actor_2, subject_2, rule_type, rule_time, date_period, Group)) 
+
+
+
+
+#combine dfs for mixed model and make sure rule time is numeric
+rules.length.data.frame_MM_2022G2 <- rbind(retal_comb_ready_for_mm_2022G2, pile_comb_ready_for_mm_2022G2, pass_comb_ready_for_mm_2022G2, opp_comb_ready_for_mm_2022G2, pun_comb_ready_for_mm_2022G2)
+rules.length.data.frame_MM_2022G2$rule_time <- as.numeric(rules.length.data.frame_MM_2022G2$rule_time )
+
+
+
+#write.csv(rules.length.data.frame_MM_2022G2, "rules.length.data.frame_MM_2022G2.csv", row.names = FALSE)
+
+
+
+
+rules.length.data.frame_MM_2022G2 <- read_csv("rules.length.data.frame_MM_2022G2.csv")
+
+
+
+
+
+
+
+
+#compare motif speed via mixed model
+obs_time_mod_2022G2 <- glmer(rule_time ~ rule_type + (1 | date_period)     , data = rules.length.data.frame_MM_2022G2 , control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun=2e5)), family = Gamma(link = "log"))
+
+summary_obs_time_mod_2022G2 <- summary(obs_time_mod_2022G2)
+
+summary_obs_time_mod_2022G2
+
+#CIs for base model
+ci_model <- confint(obs_time_mod_2022G2, method = "Wald")
+ci_model
+
+#calculate r squared
+r.squaredGLMM(obs_time_mod_2022G2)
+
+#post hoc multiple comparisons
+posthoc_2022G2 <- glht(obs_time_mod_2022G2, linfct = mcp(rule_type = "Tukey"))
+summary(posthoc_2022G2)
+
+#CIs for post hoc comparisons
+ci_tukey <- confint(posthoc_2022G2)
+ci_tukey
+
+
+
+#Calculate earth movers distance between each rules motif speed distributions for each group
+
+#EMD 
+#ret = retaliation
+#pile = pile-on
+#pass = pass-along 
+#opp = opportunism
+#pun = punishment
+
+emd_ret_vs_pile_2022G2 <- emdist::emd(summary.pile_length_ready_2022G2_density_no_count_reordered_mat, summary.retal_length_ready2022G2_density_no_count_reordered_mat)  
+emd_ret_vs_pile_2022G2
+
+
+
+
+emd_ret_vs_pass_2022G2 <- emdist::emd(summary.pass_length_ready_2022G2_density_no_count_reordered_mat, summary.retal_length_ready2022G2_density_no_count_reordered_mat)  
+emd_ret_vs_pass_2022G2
+
+
+emd_ret_vs_opp_2022G2 <- emdist::emd(summary.opp_length_ready_2022G2_density_no_count_reordered_mat, summary.retal_length_ready2022G2_density_no_count_reordered_mat)  
+emd_ret_vs_opp_2022G2
+
+
+emd_ret_vs_pun_2022G2 <- emdist::emd(summary.pun_length_ready_2022G2_density_no_count_reordered_mat, summary.retal_length_ready2022G2_density_no_count_reordered_mat)  
+emd_ret_vs_pun_2022G2
+
+
+
+emd_pile_vs_pass_2022G2 <- emdist::emd(summary.pile_length_ready_2022G2_density_no_count_reordered_mat, summary.pass_length_ready_2022G2_density_no_count_reordered_mat)
+emd_pile_vs_pass_2022G2
+
+
+emd_pile_vs_opp_2022G2 <- emdist::emd(summary.pile_length_ready_2022G2_density_no_count_reordered_mat, summary.opp_length_ready_2022G2_density_no_count_reordered_mat)
+emd_pile_vs_opp_2022G2
+
+
+emd_pile_vs_pun_2022G2 <- emdist::emd(summary.pile_length_ready_2022G2_density_no_count_reordered_mat, summary.pun_length_ready_2022G2_density_no_count_reordered_mat)
+emd_pile_vs_pun_2022G2
+
+
+emd_pass_vs_opp_2022G2 <- emdist::emd(summary.pass_length_ready_2022G2_density_no_count_reordered_mat, summary.opp_length_ready_2022G2_density_no_count_reordered_mat)
+emd_pass_vs_opp_2022G2
+
+
+emd_pass_vs_pun_2022G2 <- emdist::emd(summary.pass_length_ready_2022G2_density_no_count_reordered_mat, summary.pun_length_ready_2022G2_density_no_count_reordered_mat)
+emd_pass_vs_pun_2022G2
+
+
+emd_opp_vs_pun_2022G2 <- emdist::emd(summary.opp_length_ready_2022G2_density_no_count_reordered_mat, summary.pun_length_ready_2022G2_density_no_count_reordered_mat)
+emd_opp_vs_pun_2022G2
+
+
+
+#Combine EMD comparisons
+emd_2022G2_all <- c(emd_pass_vs_opp_2022G2, emd_pile_vs_opp_2022G2, emd_opp_vs_pun_2022G2,  emd_ret_vs_opp_2022G2, emd_pile_vs_pass_2022G2, emd_pass_vs_pun_2022G2, emd_ret_vs_pass_2022G2, emd_pile_vs_pun_2022G2, emd_ret_vs_pile_2022G2, emd_ret_vs_pun_2022G2)
+
+
+
+
+#calculate the mean motif speed for each rule
+mean_rule_time_2022G2_summary <- rules.length.data.frame_MM_2022G2 %>% group_by(rule_type) %>%
+  dplyr::summarize (mean(rule_time))
+mean_rule_time_2022G2_summary
+```
+
+
+
+#Summary heatmap to compare motif speeds
+```{r}
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(here)
+
+
+
+#load file
+summary_heatmap_file <- read_csv("Data_for_summary_heatmap.csv") 
+
+head(summary_heatmap_file)
+
+#ensure emd is numeric
+summary_heatmap_file$EMD <- as.numeric(summary_heatmap_file$EMD)
+
+
+#standardize group id column
+summary_heatmap_file <- summary_heatmap_file %>%
+  mutate(Group_ID = case_when(
+    Group_ID == "Group_1" ~ "Group 1",
+    Group_ID == "Group_2" ~ "Group 2",
+    Group_ID == "Group_3" ~ "Group 3",
+    TRUE ~ Group_ID  #Keep other values unchanged
+  ))
+
+
+#duplicate mirror of rules to make sure both directions are there to include different values in upper and lower triangles of heatmap later
+summary_heatmap_file_rule_flipped <- summary_heatmap_file  %>%
+  bind_rows(
+    summary_heatmap_file %>%
+      rename(Rule_1 = Rule_2, Rule_2 = Rule_1)
+  )
+
+
+
+
+#Ensure all rule combinations are present
+rules <- unique(c(summary_heatmap_file$Rule_1, summary_heatmap_file$Rule_2))
+all_combos <- expand.grid(Rule_1 = rules, Rule_2 = rules)
+
+
+
+#join all combos to df    
+summary_heatmap_file_final <- all_combos %>%
+  left_join(summary_heatmap_file_rule_flipped, by = c("Rule_1", "Rule_2"))
+
+
+
+#make 3 copies of each rule vs rule combo
+just_same_combo <- subset(summary_heatmap_file_final, Rule_1 == Rule_2) %>%
+  slice(rep(1:n(), each = 3))  
+
+num_rules <- length(unique(just_same_combo$Rule_1))
+
+#create group labels for each one of just the same vs same rules
+  just_same_combo <- mutate(just_same_combo, Group_ID = rep(c("Group 1", "Group 2", "Group 3"), times = num_rules))      
+
+  summary_heatmap_file_cut <- subset(summary_heatmap_file_final, Rule_1 != Rule_2)
+
+summary_heatmap_file_final <- rbind(just_same_combo, summary_heatmap_file_cut)
+
+#replace na p values with "-"
+summary_heatmap_file_final <- summary_heatmap_file_final %>%
+  mutate(p = ifelse(is.na(p), "-", p))
+
+#ensure motif speeds are numeric
+summary_heatmap_file_final$Rule_1_speed <- as.numeric(summary_heatmap_file_final$Rule_1_speed)
+
+summary_heatmap_file_final$Rule_2_speed <- as.numeric(summary_heatmap_file_final$Rule_2_speed)
+
+
+summary_heatmap_file_final$mean_diff <- summary_heatmap_file_final$Rule_1_speed - summary_heatmap_file_final$Rule_2_speed
+
+
+
+library(dplyr)
+library(ggplot2)
+
+#Desired rule order
+desired_levels <- c("Retaliation", "Pile-on", "Pass-along", "Opportunism", "Punishment")
+
+#Bold these p-values
+bold_values <- c("<0.001", "0.025", "0.014", "0.027", "0.004")
+
+df <- summary_heatmap_file_final %>%
+  mutate(
+    #positional indices for triangles
+    xi = match(as.character(Rule_2), desired_levels),  #Rule_2 (x-axis)
+    yj = match(as.character(Rule_1), desired_levels),  #Rule_1 (y-axis)
+
+    #factor ordering for display
+    Rule_2 = factor(Rule_2, levels = desired_levels),
+    Rule_1 = factor(Rule_1, levels = rev(desired_levels)),
+
+    #labels: upper triangle = EMD (1 decimal), lower triangle = p, diagonal blank
+    label_value = case_when(
+      yj < xi ~ ifelse(is.na(mean_diff), "", format(round(mean_diff, 1), nsmall = 1)),
+      yj > xi ~ p,
+      TRUE ~ ""
+    ),
+
+    #bold specific p-values
+    fontface = case_when(
+      yj > xi & p %in% bold_values ~ "bold",
+      TRUE ~ "plain"
+    )
+  )
+
+
+
+
+
+#Plot heatmap
+summary_heatmap <- ggplot(df, aes(x = Rule_2, y = Rule_1, fill = EMD )) + 
+  geom_tile(colour="grey20",size=0.25, linewidth = 0.3) +
+      scale_fill_distiller(palette = "Spectral", direction = -1) +  
+  coord_fixed() +  #Ensures square cells
+  geom_text(aes(label = label_value,  fontface = fontface), color = "black", size = 12) +  # Add text labels
+  facet_wrap(~ Group_ID,  ncol = 3, nrow = 1) +#Free x axis but consistent bar widths
+  theme_minimal()+
+  theme(
+    legend.text = element_text(size = 16),
+    legend.title = element_text(size = 22),
+    legend.key.size = unit(1.2, "cm"),
+    legend.position = "bottom",
+    strip.text  = element_text(size = 24, face = "bold"),
+    axis.text.x = element_text(angle = 90, size = 24, vjust=0.6),
+    axis.text.y = element_text(size = 24), 
+    axis.title.x = element_text(size = 24, face = "bold",  margin = margin(t = 15)),  #X axis title
+    axis.title.y = element_text(size = 24, face = "bold",  margin = margin(r = 15)),
+    panel.spacing = unit(.3, "cm")
+  )  +
+  labs(
+    x = "Rule 1",  
+    y = "Rule 2"   
+  )
+
+summary_heatmap
+#20 by 38 default
+
+
+```
+
+
+#Motif execution speed vs random violin plots
+```{r}
+
+#If not using provided df (tdr_time_comb.csv) be sure to run the Boxplot to compare motif speed across rules for each group code block above first, as well as through the Compare observed speed to random code block in each of the rule's scripts
+
+
+
+
+
+
+#could use a loop but here we execute this one by one to keep a close eye on the process 
+
+
+#subset dfs to standardize columns for combining and plotting
+retal_time_comb_2021 <- subset(retal_length_ready_2021_comb, select = c(time_to_retal, data_type))
+retal_time_comb_2022G1 <- subset(retal_length_ready_comb_2022G1, select = c(time_to_retal, data_type))
+retal_time_comb_2022G2 <- subset(retal_length_ready_2022G2_comb, select = c(time_to_retal, data_type))
+
+
+
+pile_time_comb_2021 <- subset(pile_length_ready_2021_comb, select = c(time_to_pile, data_type))
+pile_time_comb_2022G1 <- subset(pile_length_ready_2022G1_comb, select = c(time_to_pile, data_type))
+pile_time_comb_2022G2 <- subset(pile_length_ready_2022G2_comb, select = c(time_to_pile, data_type))
+
+
+
+
+pass_time_comb_2021 <- subset(pass_length_ready_comb, select = c(time_to_pass, data_type))
+pass_time_comb_2022G1 <- subset(pass_length_ready_2022G1_comb, select = c(time_to_pass, data_type))
+pass_time_comb_2022G2 <- subset(pass_length_ready_2022G2_comb, select = c(time_to_pass, data_type))
+
+
+
+opp_time_comb_2021 <- subset(opp_length_ready_2021_comb, select = c(time_to_opp, data_type))
+opp_time_comb_2022G1 <- subset(opp_length_ready_2022G1_comb, select = c(time_to_opp, data_type))
+opp_time_comb_2022G2 <- subset(opp_length_ready_2022G2_comb, select = c(time_to_opp, data_type))
+
+
+pun_time_comb_2021 <- subset(pun_length_ready_2021_comb, select = c(time_to_pun, data_type))
+pun_time_comb_2022G1 <- subset(pun_length_ready_2022G1_comb, select = c(time_to_pun, data_type))
+pun_time_comb_2022G2 <- subset(pun_length_ready_2022G2_comb, select = c(time_to_pun, data_type))
+
+
+
+
+#make all column names consistent for each rule motif df
+colnames(retal_time_comb_2021)[1] <- 'time_to_rule'
+colnames(retal_time_comb_2022G1)[1] <- 'time_to_rule'
+colnames(retal_time_comb_2022G2)[1] <- 'time_to_rule'
+colnames(pile_time_comb_2021)[1] <- 'time_to_rule'
+colnames(pile_time_comb_2022G1)[1] <- 'time_to_rule'
+colnames(pile_time_comb_2022G2)[1] <- 'time_to_rule'
+colnames(pass_time_comb_2021)[1] <- 'time_to_rule'
+colnames(pass_time_comb_2022G1)[1] <- 'time_to_rule'
+colnames(pass_time_comb_2022G2)[1] <- 'time_to_rule'
+colnames(opp_time_comb_2021)[1] <- 'time_to_rule'
+colnames(opp_time_comb_2022G1)[1] <- 'time_to_rule'
+colnames(opp_time_comb_2022G2)[1] <- 'time_to_rule'
+colnames(pun_time_comb_2021)[1] <- 'time_to_rule'
+colnames(pun_time_comb_2022G1)[1] <- 'time_to_rule'
+colnames(pun_time_comb_2022G2)[1] <- 'time_to_rule'
+
+
+
+
+
+
+#bind together into a single df
+tdr_time_comb<- rbind(
+  cbind(retal_time_comb_2021, Group = "Retalialtion Group 1", groupid = "Group 1", rule = "Retaliation"),
+  cbind(retal_time_comb_2022G1, Group = "Retaliation Group 2", groupid = "Group 2", rule = "Retaliation"),
+  cbind(retal_time_comb_2022G2, Group = "Retaliation Group 3", groupid = "Group 3", rule = "Retaliation"),
+  cbind(pile_time_comb_2021, Group = "Pile-on Group 1", groupid = "Group 1", rule = "Pile-on"),  
+  cbind(pile_time_comb_2022G1, Group = "Pile-on Group 2", groupid = "Group 2", rule = "Pile-on"),
+  cbind(pile_time_comb_2022G2, Group = "Pile-on Group 3", groupid = "Group 3", rule = "Pile-on"),
+  cbind(pass_time_comb_2021, Group = "Pass-along Group 1", groupid = "Group 1", rule = "Pass-along"),
+  cbind(pass_time_comb_2022G1, Group = "Pass-along Group 2", groupid = "Group 2", rule = "Pass-along"),
+  cbind(pass_time_comb_2022G2, Group = "Pass-along Group 3", groupid = "Group 3", rule = "Pass-along"),
+  cbind(opp_time_comb_2021, Group = "Opportunism Group 1", groupid = "Group 1", rule = "Opportunism"),
+  cbind(opp_time_comb_2022G1, Group = "Opportunism Group 2", groupid = "Group 2", rule = "Opportunism"),
+  cbind(opp_time_comb_2022G2, Group = "Opportunism Group 3", groupid = "Group 3", rule = "Opportunism"),
+  cbind(pun_time_comb_2021, Group = "Punishment Group 1", groupid = "Group 1", rule = "Punishment"),
+  cbind(pun_time_comb_2022G1, Group = "Punishment Group 2", groupid = "Group 2", rule = "Punishment"),
+  cbind(pun_time_comb_2022G2, Group = "Punishment Group 3", groupid = "Group 3", rule = "Punishment")
+
+)
+
+#write.csv(tdr_time_comb, "tdr_time_comb.csv", row.names = FALSE)
+
+
+#tdr_time_comb <- read_csv("tdr_time_comb.csv")
+
+
+
+
+
+#store each rule as a factor in the particular order they should be displayed in the plot
+custom_order <- c("Retalialtion Group 1", "Retaliation Group 2", "Retaliation Group 3", "Pile-on Group 1", "Pile-on Group 2", "Pile-on Group 3", "Pass-along Group 1", "Pass-along Group 2", "Pass-along Group 3", "Opportunism Group 1", "Opportunism Group 2", "Opportunism Group 3", "Punishment Group 1", "Punishment Group 2", "Punishment Group 3")
+
+#Convert group column to a factor with the desired order
+tdr_time_comb$Group <- factor(tdr_time_comb$Group, levels = custom_order)
+
+#row with NA from retal 2022G1. store and chop off to allow us to add p values
+row_with_na <- tdr_time_comb[apply(tdr_time_comb, 1, function(x) any(is.na(x))), ]
+
+#remove NAs
+tdr_time_comb <- na.omit(tdr_time_comb)
+
+
+
+
+
+#store p values in the particular order that corespond with the proper rule and group 
+pval_time_df <- data.frame(
+  Group = custom_order,    #Match facet group names
+  label = c("p = 0.042", "p = NA", "p = 0.847", "p < 0.001",
+            "p < 0.001", "p < 0.001", "p < 0.001", "p = 0.856",
+            "p = 0.359", "p < 0.001", "p = 0.033", "p = 0.012",
+            "p = 0.367", "p = 0.392", "p = 0.282"), #p values
+    #90% of max count in each group to keep text inside
+    x_pos = max(tdr_time_comb$time_to_rule) * 0.9,  
+    #90% of max density per group
+    y_pos = max(density(tdr_time_comb$time_to_rule)$y) * 0.9  
+)
+
+
+
+
+#select p values to be bolded
+bold_values_time <- c("p < 0.001", "p = 0.042", "p = 0.033", "p = 0.012")
+
+pval_time_df$font_weight <- ifelse(pval_time_df$label %in% bold_values_time, "bold", "plain")
+
+
+
+
+# Ensure pval_time_df respects the custom order
+pval_time_df$Group <- factor(pval_time_df$Group, levels = custom_order)
+
+#bind the necessary na row back onto tdr_time_comb
+tdr_time_comb <- rbind(tdr_time_comb, row_with_na)
+
+
+
+#faceted set of split violin plots that compare observed rule motif execution speed to random motif speed for each rule in each group
+tdr_time_plot <- ggplot(tdr_time_comb, aes(x = rule, y = time_to_rule, fill = data_type)) +
+  introdataviz::geom_split_violin(alpha= .9, trim = TRUE, show.legend = FALSE) +
+  geom_boxplot(width = .2, alpha = .2, fatten = 2, show.legend = FALSE, outlier.shape = NA) +
+  geom_text(data = pval_time_df, aes(x = Inf, y = Inf, label = label, fontface = font_weight),
+                inherit.aes = FALSE,  
+  hjust = 1.5, vjust = 1.5, color = "black", size = 9) +  #P values in top right
+  facet_wrap( ~ Group, scales = "free_x", ncol = 3, nrow = 5 ) +
+  theme_minimal() + 
+  theme(
+    strip.text = element_text(size = 30, face = "bold"),
+    axis.text = element_text(size = 30), 
+    axis.title = element_text(size = 30, face = "bold"),
+    axis.text.x = element_blank(),
+  axis.ticks.x = element_line(),
+    panel.spacing = unit(1, "lines"),
+    panel.border = element_rect(          
+      color = "black", fill = NA, linewidth = 1
+    )
+  ) +
+scale_x_discrete(name = "Density") +  
+     coord_cartesian(ylim = c(0, 1000)) +
+  scale_y_continuous(name = "Speed of response motif execution (s)",
+                     breaks = seq(0, 1000, 200) 
+                     ) + scale_fill_manual(values=c("red","gray"), name = "Data Type")
+  
+
+
+#18 by 20 either
+
+
+```
+
+
+#Observed motif count compared to random violin and barplots
+```{r}
+
+#If not using provided df (tdr_count_rand_comb.csv) be sure to run through the Compare observed response motif execution to reference model code block in each of the rule's scripts
+
+#make all column names consistent
+colnames(rand_retal_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_retal_.frame2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_retal_.frame2022G2)[1] <- 'count_of_rule_follows'
+colnames(rand_pile_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_pile_.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_pile_.frame_2022G2)[1] <- 'count_of_rule_follows'
+colnames(rand_pass_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_pass_.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_pass_.frame_2022G2)[1] <- 'count_of_rule_follows'
+colnames(rand_opp_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_opp_.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_opp_.frame_2022G2)[1] <- 'count_of_rule_follows'
+colnames(rand_pun_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_pun_.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_pun_.frame_2022G2)[1] <- 'count_of_rule_follows'
+
+
+
+
+
+
+
+#bind all dfs containing the counts of motif execution from the randomized reference models. bind possible grouping factors
+tdr_count_rand_comb <- rbind(
+  cbind(rand_retal_.frame, Group = "Retalialtion Group 1", groupid = "Group 1", rule = "Retaliation"),
+  cbind(rand_retal_.frame2022G1, Group = "Retaliation Group 2", groupid = "Group 2", rule = "Retaliation"),
+  cbind(rand_retal_.frame2022G2, Group = "Retaliation Group 3", groupid = "Group 3", rule = "Retaliation"),
+  cbind(rand_pile_.frame, Group = "Pile-on Group 1", groupid = "Group 1", rule = "Pile-on"),  
+  cbind(rand_pile_.frame_2022G1, Group = "Pile-on Group 2", groupid = "Group 2", rule = "Pile-on"),
+  cbind(rand_pile_.frame_2022G2, Group = "Pile-on Group 3", groupid = "Group 3", rule = "Pile-on"),
+  cbind(rand_pass_.frame, Group = "Pass-along Group 1", groupid = "Group 1", rule = "Pass-along"),
+  cbind(rand_pass_.frame_2022G1, Group = "Pass-along Group 2", groupid = "Group 2", rule = "Pass-along"),
+  cbind(rand_pass_.frame_2022G2, Group = "Pass-along Group 3", groupid = "Group 3", rule = "Pass-along"),
+  cbind(rand_opp_.frame, Group = "Opportunism Group 1", groupid = "Group 1", rule = "Opportunism"),
+  cbind(rand_opp_.frame_2022G1, Group = "Opportunism Group 2", groupid = "Group 2", rule = "Opportunism"),
+  cbind(rand_opp_.frame_2022G2, Group = "Opportunism Group 3", groupid = "Group 3", rule = "Opportunism"),
+  cbind(rand_pun_.frame, Group = "Punishment Group 1", groupid = "Group 1", rule = "Punishment"),
+  cbind(rand_pun_.frame_2022G1, Group = "Punishment Group 2", groupid = "Group 2", rule = "Punishment"),
+  cbind(rand_pun_.frame_2022G2, Group = "Punishment Group 3", groupid = "Group 3", rule = "Punishment")
+
+)
+
+
+
+
+
+
+
+#write.csv(tdr_count_rand_comb, "tdr_count_rand_comb.csv", row.names = FALSE)
+
+
+
+
+
+
+
+tdr_count_rand_comb <- read_csv("tdr_count_rand_comb.csv")
+
+
+
+tdr_count_rand_comb_mean <- tdr_count_rand_comb  %>% group_by(groupid, rule) %>% summarise(mean_value = mean(count_of_rule_follows, na.rm = TRUE))
+
+
+
+#make all column names consistent
+colnames(retal_real.frame)[1] <- 'count_of_rule_follows'
+colnames(retal_real.frame2022G1)[1] <- 'count_of_rule_follows'
+colnames(retal_real.frame2022G2)[1] <- 'count_of_rule_follows'
+colnames(pile_real.frame_2021)[1] <- 'count_of_rule_follows'
+colnames(pile_real.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(pile_real.frame_2022G2)[1] <- 'count_of_rule_follows'
+colnames(pass_along_real_frame_2021)[1] <- 'count_of_rule_follows'
+colnames(pass_along_real_2022G1_frame)[1] <- 'count_of_rule_follows'
+colnames(pass_along_real_2022G2_frame)[1] <- 'count_of_rule_follows'
+colnames(opp_real_2021_frame)[1] <- 'count_of_rule_follows'
+colnames(opp_real_2022G1_frame)[1] <- 'count_of_rule_follows'
+colnames(opp_real_2022G2_frame)[1] <- 'count_of_rule_follows'
+colnames(punishment_real_2021_frame)[1] <- 'count_of_rule_follows'
+colnames(punishment_real_2022G1_frame)[1] <- 'count_of_rule_follows'
+colnames(punishment_real_2022G2_frame)[1] <- 'count_of_rule_follows'
+
+# #bind all dfs containing the counts of motif execution from observed data. bind possible grouping factors
+tdr_count_real_comb<- rbind(
+  cbind(retal_real.frame, Group = "Retalialtion Group 1", groupid = "Group 1", rule = "Retaliation"),
+  cbind(retal_real.frame2022G1, Group = "Retaliation Group 2", groupid = "Group 2", rule = "Retaliation"),
+  cbind(retal_real.frame2022G2, Group = "Retaliation Group 3", groupid = "Group 3", rule = "Retaliation"),
+  cbind(pile_real.frame_2021, Group = "Pile-on Group 1", groupid = "Group 1", rule = "Pile-on"),  
+  cbind(pile_real.frame_2022G1, Group = "Pile-on Group 2", groupid = "Group 2", rule = "Pile-on"),
+  cbind(pile_real.frame_2022G2, Group = "Pile-on Group 3", groupid = "Group 3", rule = "Pile-on"),
+  cbind(pass_along_real_frame_2021, Group = "Pass-along Group 1", groupid = "Group 1", rule = "Pass-along"),
+  cbind(pass_along_real_2022G1_frame, Group = "Pass-along Group 2", groupid = "Group 2", rule = "Pass-along"),
+  cbind(pass_along_real_2022G2_frame, Group = "Pass-along Group 3", groupid = "Group 3", rule = "Pass-along"),
+  cbind(opp_real_2021_frame, Group = "Opportunism Group 1", groupid = "Group 1", rule = "Opportunism"),
+  cbind(opp_real_2022G1_frame, Group = "Opportunism Group 2", groupid = "Group 2", rule = "Opportunism"),
+  cbind(opp_real_2022G2_frame, Group = "Opportunism Group 3", groupid = "Group 3", rule = "Opportunism"),
+  cbind(punishment_real_2021_frame, Group = "Punishment Group 1", groupid = "Group 1", rule = "Punishment"),
+  cbind(punishment_real_2022G1_frame, Group = "Punishment Group 2", groupid = "Group 2", rule = "Punishment"),
+  cbind(punishment_real_2022G2_frame, Group = "Punishment Group 3", groupid = "Group 3", rule = "Punishment")
+
+)
+
+#write.csv(tdr_count_real_comb, "tdr_count_real_comb.csv", row.names = FALSE)
+
+
+
+
+tdr_count_real_comb <- read_csv("tdr_count_real_comb.csv")
+
+
+
+
+#set order in which rules should be displayed in the plot
+custom_order <- c("Retaliation","Pile-on",  "Pass-along", "Opportunism", "Punishment")
+tdr_count_rand_comb$rule <- factor(tdr_count_rand_comb$rule, levels = custom_order)
+
+tdr_count_real_comb$rule <- factor(tdr_count_real_comb$rule, levels = custom_order)
+
+
+
+
+
+
+
+
+
+#compressed violin version
+
+rule_order <- c("Retaliation","Pile-on","Pass-along","Opportunism","Punishment")
+#Use only rules that actually exist in data just in case but keep the specified order
+present_rules <- intersect(rule_order, unique(tdr_count_rand_comb$rule))
+groups <- sort(unique(tdr_count_rand_comb$groupid))
+
+#Build axis order with rules clustered together and then g1 g2 g3 of each 
+#makes it so goes through groups first then rules
+#looks like Retaliation – G1,G2,G3 | Pile-on – G1,G2,G3 | ...
+axis_order <- expand.grid(
+  groupid = groups,
+  rule    = present_rules,
+  KEEP.OUT.ATTRS = FALSE
+) |>
+  mutate(xcat = paste0(rule, "–", groupid)) |>
+  pull(xcat)
+#make sure only pulling out appropriate rules and groups
+
+tdr_rand2 <- tdr_count_rand_comb |>
+  filter(rule %in% present_rules, groupid %in% groups) |>
+  mutate(
+    rule = factor(rule, levels = present_rules),
+    xcat = factor(paste0(rule, "–", groupid), levels = axis_order)
+  )
+#same thing for observed rule follows
+tdr_real2 <- tdr_count_real_comb |>
+  filter(rule %in% present_rules, groupid %in% groups) |>
+  mutate(
+    rule = factor(rule, levels = present_rules),
+    xcat = factor(paste0(rule, "–", groupid), levels = axis_order)
+  )
+
+#create separator positions between rule blocks
+g_per_rule    <- length(groups)
+sep_positions <- (seq_len(length(present_rules) - 1) * g_per_rule) + 0.5
+
+#Create group labels for each rule in the plot
+group_labels <- rep(c(1,2,3), times = length(present_rules))
+
+
+#centers of each rule block for top labels
+rule_centers <- seq(
+  from = (g_per_rule + 1) / 2,
+  by   = g_per_rule,
+  length.out = length(present_rules)
+)
+
+
+
+#plot rule motif violin plots
+#find a y position a little above the violins for rule labels
+y_top <- max(tdr_rand2$count_of_rule_follows, na.rm = TRUE)
+y_rule_lab <- y_top * 1.08
+
+rule_violin <- ggplot(tdr_rand2, aes(x = xcat, y = count_of_rule_follows)) +
+  #separators behind violins
+  geom_vline(xintercept = sep_positions, linetype = "dashed",
+             color = "grey60", linewidth = 0.8) +
+  #randomized reference distributions as gray violins
+  geom_violin(fill = "grey70", color = "black", alpha = 1,
+              width = 0.9, trim = FALSE, scale = "width") +
+  #mean bar across each violin
+  stat_summary(fun = mean, geom = "crossbar", width = 0.6,
+               color = "black", linewidth = 0.3) +
+  #observed value as red horizontal line
+  geom_segment(
+    data = tdr_real2,
+    aes(x = as.numeric(xcat) - 0.35,
+        xend = as.numeric(xcat) + 0.35,
+        y = count_of_rule_follows,
+        yend = count_of_rule_follows),
+    inherit.aes = FALSE,
+    linewidth = 1.2, color = "red"
+  ) +
+  #rule labels centered above each block
+  annotate(
+  "text",
+  x = rule_centers,
+  y = Inf,
+  label = present_rules,
+  vjust = -0.8,
+  size = 6,
+  fontface = "bold"
+) +
+  labs(
+    x = "Group",
+    y = "Count of rule follows"
+  ) +
+  scale_x_discrete(labels = group_labels) +
+  coord_cartesian(clip = "off") +
+  theme_minimal(base_size = 20) +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.8),
+    axis.text.x  = element_text(angle = 0, hjust = 0.5),
+    axis.ticks.x = element_line(),
+    plot.margin  = margin(20, 5.5, 5.5, 5.5)
+  )
+
+rule_violin
+
+#15 by 12 
+
+
+
+
+
+
+
+
+#short bar plot to attach
+head(tdr_count_rand_comb_mean)
+head(tdr_count_real_comb)
+
+
+tdr_count_both_comb <- tdr_count_rand_comb_mean %>%
+  left_join(tdr_count_real_comb, by = c("groupid", "rule"))
+#obtain the difference between observed count and the mean of the reference distribution
+tdr_count_both_comb$dif <- tdr_count_both_comb$count_of_rule_follows - tdr_count_both_comb$mean_value
+
+
+
+rule_order <- c("Retaliation","Pile-on","Pass-along","Opportunism","Punishment")
+#Use only rules that actually exist in data just in case but keep the specified order
+present_rules <- intersect(rule_order, unique(tdr_count_both_comb$rule))
+groups <- sort(unique(tdr_count_both_comb$groupid))
+
+#Build axis order with rules clustered together and then g1 g2 g3 of each 
+#makes it so goes through groups first then rules
+#looks like Retaliation – G1,G2,G3 | Pile-on – G1,G2,G3 | ...
+axis_order <- expand.grid(
+  groupid = groups,
+  rule    = present_rules,
+  KEEP.OUT.ATTRS = FALSE
+) |>
+  mutate(xcat = paste0(rule, "–", groupid)) |>
+  pull(xcat)
+#make sure only pulling out appropriate rules and groups
+
+tdr_count_both_comb2 <- tdr_count_both_comb |>
+  filter(rule %in% present_rules, groupid %in% groups) |>
+  mutate(
+    rule = factor(rule, levels = present_rules),
+    xcat = factor(paste0(rule, "–", groupid), levels = axis_order)
+  )
+
+#create separator positions between rule blocks
+g_per_rule    <- length(groups)
+sep_positions <- (seq_len(length(present_rules) - 1) * g_per_rule) + 0.5
+
+
+
+rule_bar <- ggplot(tdr_count_both_comb2, aes(x = xcat, y = dif)) +
+  #separators behind bars
+  geom_vline(xintercept = sep_positions, linetype = "dashed",
+             color = "grey60", linewidth = 0.8) +
+  #bars
+  geom_col(fill = "grey60", color = "black") +
+  labs(
+    x = "Group",
+    y = "Count of rule follows",
+    title = "Observed vs. randomized reference by rule and group (bar)"
+  ) +
+  scale_x_discrete(labels = group_labels) +
+  scale_y_continuous(limits = c(-100, 100)) +
+  theme_minimal(base_size = 20) +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.8),
+    axis.text.x  = element_text(angle = 0, hjust = 0.5),
+    axis.ticks.x = element_line()
+  )
+rule_bar
+
+
+
+
+
+library(patchwork)
+
+#keep the top plot as is visually, just hide its x label ticks so they don't repeat
+rule_violin_top <- rule_violin +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x  = element_blank(),
+    axis.ticks.x = element_blank(),
+    plot.margin  = margin(20, 5.5, 0, 5.5)
+  )
+
+#keep bar plot exactly as is but tweak bottom margin
+rule_bar_bottom <- rule_bar +
+  theme(
+    plot.margin = margin(0, 5.5, 5.5, 5.5)
+  )
+
+
+#stack two plots together. The violins on top (bigger), bars below (smaller)
+combined <- rule_violin_top / rule_bar_bottom +
+  plot_layout(heights = c(2, 1), guides = "keep")
+
+combined
+#12 by 10
+
+
+#P values added manually in inkscape for easier formatting
+```
+
+
+
+#individ faceted heatmap of observed rule follows
+```{r}
+library(scales)
+
+#If not using provided df (indiv_combined.csv) be sure to run through the Individual motif execution code block in each of the rule's scripts
+
+
+
+#bind individ dataframes into one summary_heatmap_file
+indiv_combined <- rbind(
+  cbind(summary.retal.individ_2021, Group = "Retalialtion Group 1", groupid = "Group 1", rule = "Retaliation"),
+  cbind(summary.retal.individ_2022G1, Group = "Retaliation Group 2", groupid = "Group 2", rule = "Retaliation"),
+  cbind(summary.retal.individ_2022G2, Group = "Retaliation Group 3", groupid = "Group 3", rule = "Retaliation"),
+  cbind(summary.pile.individ_2021, Group = "Pile-on Group 1", groupid = "Group 1", rule = "Pile-on"),  
+  cbind(summary.pile.individ_2022G1, Group = "Pile-on Group 2", groupid = "Group 2", rule = "Pile-on"),
+  cbind(summary.pile.individ_2022G2, Group = "Pile-on Group 3", groupid = "Group 3", rule = "Pile-on"),
+  cbind(summary.pass.individ_2021, Group = "Pass-along Group 1", groupid = "Group 1", rule = "Pass-along"),
+  cbind(summary.pass.individ_2022G1, Group = "Pass-along Group 2", groupid = "Group 2", rule = "Pass-along"),
+  cbind(summary.pass.individ_2022G2, Group = "Pass-along Group 3", groupid = "Group 3", rule = "Pass-along"),
+  cbind(summary.opp.individ_2021, Group = "Opportunism Group 1", groupid = "Group 1", rule = "Opportunism"),
+  cbind(summary.opp.individ_2022G1, Group = "Opportunism Group 2", groupid = "Group 2", rule = "Opportunism"),
+  cbind(summary.opp.individ_2022G2, Group = "Opportunism Group 3", groupid = "Group 3", rule = "Opportunism"),
+  cbind(summary.pun.individ_2021, Group = "Punishment Group 1", groupid = "Group 1", rule = "Punishment"),
+  cbind(summary.pun.individ_2022G1, Group = "Punishment Group 2", groupid = "Group 2", rule = "Punishment"),
+  cbind(summary.pun.individ_2022G2, Group = "Punishment Group 3", groupid = "Group 3", rule = "Punishment")
+
+)
+
+unique(indiv_combined$actor_2)
+
+
+#write.csv(indiv_combined, "indiv_combined.csv", row.names = FALSE)
+
+
+#indiv_combined <- read_csv("indiv_combined.csv")
+
+
+
+
+
+
+
+
+
+
+#store each group as a factor in a particular order I would like them displayed in my plot
+indiv_combined$groupid <- factor(indiv_combined$groupid, levels = c("Group 1", "Group 2", "Group 3"))
+
+#store each rule as a factor in a particular order I would like them displayed in my plot
+indiv_combined$rule <- factor(indiv_combined$rule, levels = c("Retaliation", "Pile-on", "Pass-along", "Opportunism", "Punishment"))
+
+
+
+
+
+
+#G1
+indiv_combined_G1 <- subset(indiv_combined, groupid == "Group 1")
+
+#rescale within a group; if all values are the same, map to 0.5 so tiles aren't white
+rescale_within <- function(x) {
+  if (all(is.na(x))) return(x)
+  rng <- range(x, na.rm = TRUE)
+  if (rng[1] == rng[2]) rep(0.5, length(x)) else scales::rescale(x, to = c(0, 1), from = rng)
+}
+
+#Create a per rule scaled value
+indiv_combined_G1 <- indiv_combined_G1 %>%
+  group_by(rule) %>%
+  mutate(scaled_count = rescale_within(count)) %>%
+  ungroup()
+
+# Plot G1
+
+TDR_individ_heatmap_G1 <- ggplot(indiv_combined_G1, aes(x = rule, y = actor_2, fill = scaled_count)) + 
+  geom_tile(colour = "grey20", size = 0.2, linewidth = 0.3) +
+  geom_text(aes(label = count), color = "black", size = 12) +
+  scale_fill_distiller(
+    palette = "Spectral",
+    direction = -1,
+    limits = c(0, 1),
+    name = "Within-motif intensity",
+    labels = label_percent(accuracy = 1)
+    # na.value = "white"  # uncomment if you want explicit NA tiles to be white
+  ) +
+  theme_minimal() +
+  ggtitle("Group 1") +
+  theme(
+    plot.title = element_text(size = 45, face = "bold", hjust = 0.5),
+    strip.text = element_text(size = 45, face = "bold"),
+    axis.text.x = element_text(angle = 90, size = 30, vjust = 0.5),
+    axis.text.y = element_text(size = 30),
+    axis.title.x = element_text(size = 40, margin = margin(t = 15)),
+    axis.title.y = element_text(size = 40, margin = margin(r = 15)),
+    plot.background = element_rect(color = "black", linewidth = 3),
+    plot.margin = margin(17, 17, 17, 17),
+    panel.spacing = unit(.3, "cm")
+  ) +
+  labs(
+    x = "Time Dependent Rule",
+    y = "Parakeet ID"
+  )
+
+TDR_individ_heatmap_G1
+
+
+#18 by 27 portrait
+
+
+
+
+
+#G2
+indiv_combined_G2 <- subset(indiv_combined, groupid == "Group 2")
+
+#rescale within a group; if all values are the same, map to 0.5 so tiles aren't white
+rescale_within <- function(x) {
+  if (all(is.na(x))) return(x)
+  rng <- range(x, na.rm = TRUE)
+  if (rng[1] == rng[2]) rep(0.5, length(x)) else scales::rescale(x, to = c(0, 1), from = rng)
+}
+
+#Create a per rule scaled value
+indiv_combined_G2 <- indiv_combined_G2 %>%
+  group_by(rule) %>%
+  mutate(scaled_count = rescale_within(count)) %>%
+  ungroup()
+
+# Plot G2
+
+TDR_individ_heatmap_G2 <- ggplot(indiv_combined_G2, aes(x = rule, y = actor_2, fill = scaled_count)) + 
+  geom_tile(colour = "grey20", size = 0.2, linewidth = 0.3) +
+  geom_text(aes(label = count), color = "black", size = 12) +
+  scale_fill_distiller(
+    palette = "Spectral",
+    direction = -1,
+    limits = c(0, 1),
+    name = "Within-motif intensity",
+    labels = label_percent(accuracy = 1)
+  ) +
+  theme_minimal() +
+  ggtitle("Group 2") +
+  theme(
+    plot.title = element_text(size = 45, face = "bold", hjust = 0.5),
+    strip.text = element_text(size = 45, face = "bold"),
+    axis.text.x = element_text(angle = 90, size = 30, vjust = 0.5),
+    axis.text.y = element_text(size = 30),
+    axis.title.x = element_text(size = 40, margin = margin(t = 15)),
+    axis.title.y = element_text(size = 40, margin = margin(r = 15)),
+    plot.background = element_rect(color = "black", linewidth = 3),
+    plot.margin = margin(17, 17, 17, 17),
+    panel.spacing = unit(.3, "cm")
+  ) +
+  labs(
+    x = "Time Dependent Rule",
+    y = "Parakeet ID"
+  )
+
+TDR_individ_heatmap_G2
+
+#18 by 15 portrait
+
+#G3
+indiv_combined_G3 <- subset(indiv_combined, groupid == "Group 3")
+
+
+#rescale within a group; if all values are the same, map to 0.5 so tiles aren't white
+rescale_within <- function(x) {
+  if (all(is.na(x))) return(x)
+  rng <- range(x, na.rm = TRUE)
+  if (rng[1] == rng[2]) rep(0.5, length(x)) else scales::rescale(x, to = c(0, 1), from = rng)
+}
+
+#Create a per rule scaled value
+indiv_combined_G3 <- indiv_combined_G3 %>%
+  group_by(rule) %>%
+  mutate(scaled_count = rescale_within(count)) %>%
+  ungroup()
+
+# Plot G3
+
+
+TDR_individ_heatmap_G3 <- ggplot(indiv_combined_G3, aes(x = rule, y = actor_2, fill = scaled_count)) + 
+  geom_tile(colour = "grey20", size = 0.2, linewidth = 0.3) +
+  geom_text(aes(label = count), color = "black", size = 12) +
+  scale_fill_distiller(
+    palette = "Spectral",
+    direction = -1,
+    limits = c(0, 1),
+    name = "Within-motif intensity",
+    labels = label_percent(accuracy = 1)
+  ) +
+  theme_minimal() +
+  ggtitle("Group 2") +
+  theme(
+    plot.title = element_text(size = 45, face = "bold", hjust = 0.5),
+    strip.text = element_text(size = 45, face = "bold"),
+    axis.text.x = element_text(angle = 90, size = 30, vjust = 0.5),
+    axis.text.y = element_text(size = 30),
+    axis.title.x = element_text(size = 40, margin = margin(t = 15)),
+    axis.title.y = element_text(size = 40, margin = margin(r = 15)),
+    plot.background = element_rect(color = "black", linewidth = 3),
+    plot.margin = margin(17, 17, 17, 17),
+    panel.spacing = unit(.3, "cm")
+  ) +
+  labs(
+    x = "Time Dependent Rule",
+    y = "Parakeet ID"
+  )
+
+TDR_individ_heatmap_G3
+
+#18 by 15 portrait
+
+
+
+#Plots combined together into one figure
+ 
+ 
+ library(dplyr)
+library(ggplot2)
+library(patchwork)
+library(scales)
+
+#Helper to rescale within rule, but only for nonzero values
+#Zeros will stay NA in the fill scale and be shown as grey
+rescale_within_nonzero <- function(x) {
+  out <- rep(NA_real_, length(x))
+  
+  pos <- !is.na(x) & x > 0
+  
+  if (sum(pos) == 0) {
+    return(out)
+  }
+  
+  rng <- range(x[pos], na.rm = TRUE)
+  
+  if (rng[1] == rng[2]) {
+    out[pos] <- 0.5
+  } else {
+    out[pos] <- scales::rescale(x[pos], to = c(0, 1), from = rng)
+  }
+  
+  out
+}
+
+#Universal plotting helper
+make_heatmap <- function(df_group, group_title) {
+  dfp <- df_group %>%
+    group_by(rule) %>%
+    mutate(scaled_count = rescale_within_nonzero(count)) %>%
+    ungroup()
+
+  ggplot(dfp, aes(x = rule, y = actor_2, fill = scaled_count)) +
+    geom_tile(colour = "grey20", linewidth = 0.25) +
+    geom_text(aes(label = count), color = "black", size = 4.5) +
+    scale_fill_distiller(
+      palette = "Spectral",
+      direction = -1,
+      limits = c(0, 1),
+      na.value = "grey80",
+      name = "Within-motif intensity",
+      labels = label_percent(accuracy = 1)
+    ) +
+    coord_fixed(ratio = 0.5) +
+    ggtitle(group_title) +
+    theme_minimal(base_size = 11) +
+    theme(
+      plot.title   = element_text(size = 18, face = "bold", hjust = 0.5),
+      axis.text.x  = element_text(angle = 90, size = 9, vjust = 0.5, hjust = 1),
+      axis.text.y  = element_text(size = 9),
+      axis.title.x = element_text(size = 10, margin = margin(t = 6)),
+      axis.title.y = element_text(size = 10, margin = margin(r = 6)),
+      plot.margin  = margin(5, 5, 5, 5),
+      legend.position = "bottom",
+      legend.title = element_text(size = 8),
+      legend.text  = element_text(size = 7)
+    ) +
+    labs(x = "Time-Dependent Rule", y = "Parakeet ID")
+}
+
+#Make plots for each group 
+indiv_combined_G1 <- subset(indiv_combined, groupid == "Group 1")
+indiv_combined_G2 <- subset(indiv_combined, groupid == "Group 2")
+indiv_combined_G3 <- subset(indiv_combined, groupid == "Group 3")
+
+p1 <- make_heatmap(indiv_combined_G1, "Group 1")
+p2 <- make_heatmap(indiv_combined_G2, "Group 2")
+p3 <- make_heatmap(indiv_combined_G3, "Group 3")
+
+#Group 1 (tall) on left, Groups 2 and 3 stacked on right
+final_plot <-
+  (p1 | (p2 / p3)) +
+  plot_layout(widths = c(1.25, 1), guides = "collect") +
+  plot_annotation(theme = theme(legend.position = "bottom"))
+
+final_plot
+
+#10 by 12
+ 
+```
+
+
+#Population metrics calculations and plots
+
+```{r}
+library(vegan)
+#load df
+indiv_combined <- read_csv("indiv_combined.csv")
+
+
+head(indiv_combined)
+
+#store each rule as a factor in a particular order so when binded back on they stay in order of simple to complex
+indiv_combined$rule <- factor(indiv_combined$rule, levels = c("Retaliation", "Pile-on", "Pass-along", "Opportunism", "Punishment"))
+
+actor_col <- if ("actor" %in% names(indiv_combined)) "actor" else "actor_2"
+
+#counts of motif execution per bird
+by_actor <- indiv_combined %>%
+  group_by(groupid, rule, actor = .data[[actor_col]]) %>%
+  summarise(n = sum(count, na.rm = TRUE), .groups = "drop")
+
+#metrics per group × rule 
+metrics_all_groups <- by_actor %>%
+  group_by(groupid, rule) %>%
+  summarise(
+    Richness  = sum(n > 0, na.rm = TRUE),                    
+    Diversity = if (sum(n, na.rm = TRUE) == 0) 0 else vegan::diversity(n, index = "shannon"),
+    Evenness  = dplyr::if_else(Richness > 1, Diversity / log(Richness), NA_real_),
+    .groups = "drop"
+  )
+
+
+#group size denominator = unique individuals in each group across both roles so proportional richness is comparable across groups)
+group_sizes <- indiv_combined %>%
+  group_by(groupid) %>%
+  summarise(N = n_distinct(actor_2, na.rm = TRUE), .groups = "drop")
+
+
+#calculate proportional richness 
+metrics_all_groups <- metrics_all_groups %>%
+  left_join(group_sizes, by = "groupid") %>%
+  mutate(
+    Proportional_Richness = if_else(
+      rule %in% c("Retaliation","Pile-on"),
+      Richness / N,
+      Richness / pmax(N - 1, 1)  #avoid divide by zero
+    )
+  ) %>%
+  arrange(groupid, rule)
+
+metrics_all_groups
+
+
+
+#rename df
+diversity_summary_all <- metrics_all_groups
+
+
+
+
+
+#group 1
+diversity_summary_2021 <- subset(diversity_summary_all, groupid == "Group 1")
+
+
+#Convert to long format
+div_long_2021 <- diversity_summary_2021 %>%
+  pivot_longer(cols = c(Proportional_Richness, Diversity, Evenness),
+               names_to = "Metric",
+               values_to = "Value")
+
+#Rename for plot aesthetics
+div_long_2021$Metric[div_long_2021$Metric == "Proportional_Richness"] <- "Proportional Richness"
+div_long_2021$Metric[div_long_2021$Metric == "Diversity"] <- "Shannon's Diversity"
+div_long_2021$Metric[div_long_2021$Metric == "Evenness"] <- "Pilou's Evenness"
+
+
+
+#Establish order plots should be stacked
+div_long_2021$Metric <- factor(div_long_2021$Metric, levels = c("Proportional Richness", "Shannon's Diversity", "Pilou's Evenness"))
+
+
+# Plot
+div_long_2021_plot <- ggplot(div_long_2021, aes(x = rule, y = Value, fill = Metric)) +
+  geom_col(show.legend = FALSE, width = 0.7) +
+  facet_wrap(~ Metric, scales = "free_y") +
+  scale_fill_viridis_d(option = "D") +
+  
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.major.y = element_line(color = "grey85"),
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_text(, angle = 90, size = 12, hjust = 1),
+    strip.text = element_text(face = "bold", size = 13),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5)
+  ) +
+  labs(
+    title = "Diversity Metrics by Rule: Group 1",
+    x = NULL,
+    y = NULL
+  )
+
+div_long_2021_plot
+
+#10 by 6
+
+
+#group 2
+#Convert to long format
+diversity_summary_2022G1 <- subset(diversity_summary_all, groupid == "Group 2")
+
+div_long_2022G1 <- diversity_summary_2022G1 %>%
+  pivot_longer(cols = c(Proportional_Richness, Diversity, Evenness),
+               names_to = "Metric",
+               values_to = "Value")
+
+#Rename for plot aesthetics
+div_long_2022G1$Metric[div_long_2022G1$Metric == "Proportional_Richness"] <- "Proportional Richness"
+div_long_2022G1$Metric[div_long_2022G1$Metric == "Diversity"] <- "Shannon's Diversity"
+div_long_2022G1$Metric[div_long_2022G1$Metric == "Evenness"] <- "Pilou's Evenness"
+
+#Establish order plots should be stacked
+div_long_2022G1$Metric <- factor(div_long_2022G1$Metric, levels = c("Proportional Richness", "Shannon's Diversity", "Pilou's Evenness"))
+
+
+# Plot
+div_long_2022G1_plot <- ggplot(div_long_2022G1, aes(x = rule, y = Value, fill = Metric)) +
+  geom_col(show.legend = FALSE, width = 0.7) +
+  facet_wrap(~ Metric, scales = "free_y") +
+  scale_fill_viridis_d(option = "D") +
+  
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.major.y = element_line(color = "grey85"),
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_text(, angle = 90, size = 12, hjust = 1),
+    strip.text = element_text(face = "bold", size = 13),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5)
+  ) +
+  labs(
+    title = "Diversity Metrics by Rule: Group 2",
+    x = NULL,
+    y = NULL
+  )
+
+
+div_long_2022G1_plot
+#10 by 6
+
+
+
+
+
+
+
+
+
+
+
+#group 3
+#Convert to long format
+diversity_summary_2022G2 <- subset(diversity_summary_all, groupid == "Group 3")
+
+div_long_2022G2 <- diversity_summary_2022G2 %>%
+  pivot_longer(cols = c(Proportional_Richness, Diversity, Evenness),
+               names_to = "Metric",
+               values_to = "Value")
+
+#Rename for plot aesthetics
+div_long_2022G2$Metric[div_long_2022G2$Metric == "Proportional_Richness"] <- "Proportional Richness"
+div_long_2022G2$Metric[div_long_2022G2$Metric == "Diversity"] <- "Shannon's Diversity"
+div_long_2022G2$Metric[div_long_2022G2$Metric == "Evenness"] <- "Pilou's Evenness"
+
+#Establish order plots should be stacked
+div_long_2022G2$Metric <- factor(div_long_2022G2$Metric, levels = c("Proportional Richness", "Shannon's Diversity", "Pilou's Evenness"))
+
+
+# Plot
+div_long_2022G2_plot <- ggplot(div_long_2022G2, aes(x = rule, y = Value, fill = Metric)) +
+  geom_col(show.legend = FALSE, width = 0.7) +
+  facet_wrap(~ Metric, scales = "free_y") +
+  scale_fill_viridis_d(option = "D") +
+  
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.major.y = element_line(color = "grey85"),
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_text(, angle = 90, size = 12, hjust = 1),
+    strip.text = element_text(face = "bold", size = 13),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5)
+  ) +
+  labs(
+    title = "Diversity Metrics by Rule: Group 3",
+    x = NULL,
+    y = NULL
+  )
+#10 by 6
+
+
+#Bind all prepared dfs together
+div_long_all <- rbind(div_long_2021, div_long_2022G1, div_long_2022G2)
+
+
+#Set metric and group order
+div_long_all$Metric <- factor(div_long_all$Metric, levels = c("Proportional Richness", "Shannon's Diversity", "Pilou's Evenness"))
+div_long_all$groupid <- factor(div_long_all$groupid, levels = c("Group 1", "Group 2", "Group 3"))
+
+
+
+# Plot
+div_long_all_plot <- ggplot(div_long_all, aes(x = rule, y = Value, fill = Metric)) +
+  geom_col(show.legend = FALSE, width = 0.7) +
+    facet_grid(Metric ~ groupid, scales = "free_y", labeller = labeller(Metric = c(
+             "Shannon's Diversity" = "Shannon's\nDiversity",
+             "Pilou's Evenness" = "Pielou's\nEvenness",
+             "Proportional Richness" = "Proportional\nRichness"))) +
+  scale_fill_viridis_d(option = "D") +
+  scale_y_continuous(labels = label_number(accuracy = 0.1)) +
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.major.y = element_line(color = "grey85"),
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_text(, angle = 90, size = 12, hjust = 1),
+    strip.text = element_text(face = "bold", size = 12),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5)
+  ) +
+  labs(
+    title = "Diversity Metrics of Response Motifs by Rule",
+    x = NULL,
+    y = NULL
+  )
+#8 by 6
+
+
+```

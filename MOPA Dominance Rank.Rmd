@@ -1,0 +1,911 @@
+---
+title: "MOPA Dominance Rank"
+author: 
+date: 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#Load packages
+```{r, include=FALSE, echo=FALSE}
+library(dplyr)
+library(tidyr)
+library(reshape2)
+library(domstruc) #install_github("danm0nster/domstruc")
+library(igraph)
+library(tidyverse)
+library(here)
+
+
+```
+
+Rank detection code adapted from Dr.Annemarie van der Marel
+
+
+#2021
+## import data
+```{r data import, echo=FALSE}
+behave <- read_csv("2021_interactions_raw.csv") 
+unique(behave$date)
+
+
+# period file
+obs.day.key <-  read_csv("2021_timeline_fieldwork.csv")
+bin.dates <-  read_csv("2021_3daybins.csv") 
+# capture file to obtain bird list
+birdIDs<- read_csv("2021_birdIDs.csv") %>%
+  dplyr::select(mark_id3) %>%
+  filter(mark_id3!="") # all 20 birds
+birdIDs_removal1 <- birdIDs %>% filter(mark_id3!="BBB")
+birdIDs_removal2 <- birdIDs %>% filter(mark_id3!="GPG")
+birdIDs_removal3 <- birdIDs %>% filter(mark_id3!="OPP")
+
+```
+
+
+```{r}
+
+
+### change bird names for actor and subject, if using all data
+ #(mark_id1 = mark_id2)
+ #we then have to allocate a line for each of these birds with 0's to make the matrix complete
+
+# GBB = NPB (mark_id1 = mark_id2)
+behave$actor[behave$actor=="GBB"] <- "NPB"
+behave$subject[behave$subject=="GBB"] <- "NPB"
+
+# BOO = POO (mark_id1 = mark_id2)
+behave$actor[behave$actor=="BOO"] <- "POO"
+behave$subject[behave$subject=="BOO"] <- "POO"
+
+# NPB = PPB (mark_id2 = mark_id3)
+behave$actor[behave$actor=="NPB"] <- "PPB"
+behave$subject[behave$subject=="NPB"] <- "PPB"
+
+# check
+unique(behave$actor)
+unique(behave$subject)
+```
+
+## get data ready 
+
+to compare hierarchy over time include aggression at feeder
+
+From 2021-04-24, aggression at feeders separate but to compare with beginning add aggression at feeders with the rest
+```{r}
+# for feeder 
+feed_agg <- c("displace_feed", "crowd_feed", "spar_feed")
+
+# non-feeder aggression
+nonfeed_agg <- c("displace", "crowd", "spar")
+
+# all aggression (both feeders and nonfeeders)
+behave_agg <- behave %>%
+  separate(behavior, c("behavior", "type"), sep="_") # all aggression at both feeders and away from feeders
+
+unique(behave_agg$behavior)
+unique(behave_agg$date)
+
+```
+
+##check per perturbation period
+```{r}
+# per 3 day chunks 
+glimpse(obs.day.key)
+
+bin<- bin.dates %>%
+  dplyr::select(date, bin) 
+
+
+bin$bin <- as.numeric(bin$bin)
+
+# all aggression -> both at feeder and nonfeeder
+behave_totalagg <- left_join(behave, bin, by="date") 
+
+
+unique(behave_totalagg$bin)
+unique(behave_totalagg$date)
+
+#excluding aggression at feeder
+behave_nonfeed <- left_join(behave, bin, by="date")  
+unique(behave_nonfeed$bin)
+unique(behave_nonfeed$date)
+
+
+# 
+# behave_nonfeed <- left_join(behave, bin, by="date") %>%
+#   dplyr::filter(bin==23 | bin==25) # excluding aggression at feeder
+# unique(behave_nonfeed$bin)
+# unique(behave_nonfeed$date)
+
+```
+
+## Helper functions & data
+```{r echo=FALSE}
+
+#make matrix function (from dataframe, 1st col with row names)
+matrix.please<-function(x) {
+  m<-as.matrix(x[,-1])
+  rownames(m)<-x[,1]
+  m
+}
+
+##list of all valid color combinations
+ 
+bird.list <- sort(unique(birdIDs$mark_id3)) 
+length(bird.list)
+
+
+# list of all possible dyads
+dyad.list <- expand.grid(bird.list, bird.list) #head(dyad.list)
+names(dyad.list) <- c("actor", "subject")
+dyad.list <- subset(dyad.list, actor!=subject)
+dyad.list$dyadID <- paste(dyad.list$actor, dyad.list$subject, sep="-")
+
+# list of days with observations
+obsday.list <- as.character(unique(behave$date)) #only days with observations
+obsday.list.wday <- as.data.frame(obsday.list)
+colnames(obsday.list.wday) <- "date"
+obsday.list.wday$nday <- seq(1:length(obsday.list.wday$date))
+
+
+```
+
+
+## bin level more conservative: removing duplicates by crowds and displacements combined
+```{r Dominance using crowds and displacements more conservative, echo=FALSE}
+#### Remove duplicates for displacements and crowds ####
+
+
+# filter displacement & crowd data from all data
+aggDC <- behave_totalagg %>%
+  subset(behavior=="displace" | behavior=="crowd" | behavior=="displace_feed" | behavior=="crowd_feed") %>% 
+  dplyr::select(sessionKEY, session_start_timeStamp, bin, date, time, actor, subject, behavior)
+
+aggDC$date <- as.Date(aggDC$date)
+
+#add  May 15 into bin 2
+aggDC$bin[aggDC$date == as.Date("2021-05-15")] <- 2
+
+#PPB doesnt show up in the study period (5-15 to 5-18 so remove from birdlist)
+bird.list_ppb_removed <-  bird.list[bird.list != "PPB"]
+
+str(aggDC)
+length(aggDC$sessionKEY)
+
+# keep only observations where the actor is in the list of bird IDs
+aggDC.goodID <- subset(aggDC, actor %in% bird.list_ppb_removed)
+
+# keep only observations where the actor (found above) and the subject are both in the list of bird IDs
+aggDC.goodID <- subset(aggDC.goodID, subject %in% bird.list_ppb_removed)
+
+
+## for total agonistic events (crowds and displacements combined)
+#finds n CD and crowds by sessionKEY, date, time, actor, subject, behavior
+dyad.totalagg.key <- aggDC.goodID %>% 
+  dplyr::group_by(sessionKEY, bin, date, time,actor, subject) %>%  # removed , behavior
+  tally() # counts behaviors that were observed within the same minute
+
+#finds max agg per actor by date, time, and behavior type. Return just that summary
+dyad.totalagg.maxkey <- dyad.totalagg.key %>% 
+  group_by(actor, subject,bin,  date, time) %>% # removed behavior, behavior
+  slice(which.max(n)) %>% # n.aggXaggXkey if summarise, n if tally
+  ungroup()
+head(dyad.totalagg.maxkey)
+
+#finds n disps per actor by date for summarized/trimmed data
+dyad.totalaggXbin <- dyad.totalagg.maxkey %>% 
+  group_by(actor, subject, bin) %>% # removed behavior to get total aggression
+  summarise(n.aggXbin=sum(n)) %>% 
+  ungroup()
+head(dyad.totalaggXbin)
+sum(dyad.totalaggXbin$n.aggXbin)
+
+#Here we are interested in total number of interactions instead of chronological #order of interactions. If you require order of interactions, then next steps will #be different from the following setup as you will have to add the behaviors with #n>1 as separate rows. 
+
+## Summarize displacements & crowds combined --> total aggression
+
+head(dyad.totalaggXbin) # crowds and displacement combined from the start, which is more conservative
+str(dyad.totalaggXbin)
+
+# check 
+unique(dyad.totalaggXbin$actor)
+unique(dyad.totalaggXbin$subject)
+
+sum(dyad.totalaggXbin$n.aggXbin)
+
+# summarize total aggression events per day
+sum.aggDCXbin_conservative <-dyad.totalaggXbin %>%
+  group_by(bin) %>%
+  summarize(n.agg = sum(n.aggXbin), n.dyads=length(actor))
+head(sum.aggDCXbin_conservative)
+
+n.aggDC.conservative <- sum(sum.aggDCXbin_conservative$n.agg)
+
+
+#### DOMINANCE RANK BY bin####
+
+head(dyad.totalaggXbin)
+
+# make empty data frame to put data in
+ec_rank <- data.frame(run.code=character(),
+                      bird.list_ppb_removed=character(), 
+                      dom_ec=numeric(),
+                      between=numeric())
+
+# run = 1
+
+test <- subset(dyad.totalaggXbin, bin == 2)
+
+
+start.time <- Sys.time()
+
+dyad.totalaggXbin <- dyad.totalaggXbin %>% filter(!is.na(bin))
+
+
+loopby<-unique(dyad.totalaggXbin$bin)
+
+#i=1
+
+for(i in seq_along(unique(dyad.totalaggXbin$bin))){
+  run.code <- loopby[i]
+  print(run.code)
+  run.data <- subset(dyad.totalaggXbin, bin==run.code)
+  
+# number of dyads correct?
+  #length(run.data$actor)
+  #check <- sum.aggXday %>% filter(date==run.code)
+  #head(check)
+  
+allowed <- union(unique(run.data$actor), unique(run.data$subject))
+
+# filter df1 to rows whose actor AND subject are in df2 somewhere
+ddyad.list_filtered <- dyad.list %>%
+  filter(actor %in% allowed & subject %in% allowed)
+ 
+
+bird.list_ppb_removed_filtered <- bird.list_ppb_removed[bird.list_ppb_removed %in% allowed & !is.na(bird.list_ppb_removed)]
+
+
+  data_alldyads <- merge(ddyad.list_filtered, run.data, all.x=TRUE,
+                       by=c("actor", "subject")) 
+  
+  #head(data_alldyads)
+  #length(unique(data_alldyads$dyadID)) # with 21 birds should be 420 and with 22 462 dyads
+  
+  data_alldyads$date<-run.code
+  
+ #fill newly-merged data with 0's where no interactions
+ data_alldyads[is.na(data_alldyads)] <- 0
+  
+   #print a check
+  check <- length(data_alldyads$actor)
+  print(check)
+
+# matrix  
+  mx <- reshape2::dcast(data_alldyads, actor~subject, value.var="n.aggXbin") #head(ref.behavior1.mx)
+  mx[is.na(mx)] <- 0 #for linearity measure, matrix needs to be fully filled, no NAs
+  mx <- matrix.please(mx)
+  
+  ## dominance
+dom_ec <- dom_ec(mx)
+
+## Betweenness centrality
+# network
+  graph <- graph_from_adjacency_matrix(mx, "directed", weighted=T, diag=F)
+
+# betweenness centrality
+between <- betweenness(graph, 
+                          directed = TRUE, 
+                          weights = E(graph)$weight)
+
+
+ids <- rownames(mx)
+# combine in dataframe
+pool <- cbind.data.frame(run.code, 
+                         bird.list_ppb_removed_filtered,
+                         dom_ec,
+                         between)
+
+  ec_rank<-rbind(ec_rank, pool )
+
+}
+
+end.time <- Sys.time()
+
+#Time to run:
+end.time - start.time
+
+# check 
+head(ec_rank)
+length(unique(ec_rank$run.code))
+check<-ec_rank %>% group_by(run.code) %>% summarize(length(bird.list_ppb_removed_filtered))
+
+ec_rankXbin<-ec_rank %>%
+  rename(bin=run.code, id=bird.list_ppb_removed_filtered)
+
+# higher rank is higher position in the hierarchy?
+head(ec_rankXbin)
+
+
+ec_rankXbin <- arrange(ec_rankXbin, bin, dom_ec)
+
+MOPA_bin_rank_2021_test <- ec_rankXbin %>%
+  group_by(bin) %>%
+  mutate(rank = dense_rank(dom_ec)) %>%
+  ungroup()
+
+
+MOPA_bin_rank_2021_test <- mutate(MOPA_bin_rank_2021_test, power = (1- dom_ec))
+
+#write.csv(MOPA_bin_rank_2021_test,  "MOPA_bin_rank_2021_test.csv", row.names = FALSE)
+```
+
+
+#2022G1
+## import data
+```{r data import, echo=FALSE}
+#import data
+behave <- read_csv("2022_interactions_group1.csv") 
+
+unique(behave$date)
+
+
+# period file
+bin.dates <-  read_csv("2022_3daybins.csv") #%>%
+  
+
+# capture file to obtain bird list
+birdIDs<- read_csv("2022_birdIDs.csv") %>%
+  dplyr::select(mark_id22) %>%
+  filter(mark_id22!="") 
+
+
+```
+
+## get data ready 
+
+to compare hierarchy over time include aggression at feeder
+
+```{r}
+# for feeder 
+feed_agg <- c("displace_feed", "crowd_feed", "spar_feed")
+
+# non-feeder aggression
+nonfeed_agg <- c("displace", "crowd", "spar")
+
+# all aggression (both feeders and nonfeeders)
+behave_agg <- behave %>%
+  separate(behavior, c("behavior", "type"), sep="_") # all aggression at both feeders and away from feeders
+
+unique(behave_agg$behavior)
+unique(behave_agg$date)
+
+```
+
+
+##check per perturbation period
+```{r}
+# per 3 day chunks 
+
+bin<- bin.dates %>%
+  dplyr::select(date, bin) 
+
+
+bin$bin <- as.numeric(bin$bin)
+bin$date <- as.Date(bin$date, format = "%m/%d/%Y")
+#use to check all aggression
+behave_totalagg <- left_join(behave, bin, by="date") 
+
+unique(behave_totalagg$bin)
+unique(behave_totalagg$date)
+
+#use if want to check only nonfeeder aggression
+behave_nonfeed <- left_join(behave, bin, by="date") 
+unique(behave_nonfeed$bin)
+unique(behave_nonfeed$date)
+
+
+# 
+# behave_nonfeed <- left_join(behave, bin, by="date") %>%
+#   dplyr::filter(bin==23 | bin==25) # excluding aggression at feeder
+# unique(behave_nonfeed$bin)
+# unique(behave_nonfeed$date)
+
+```
+
+
+## Helper functions & data
+```{r echo=FALSE}
+
+#make matrix function (from dataframe, 1st col with row names)
+matrix.please<-function(x) {
+  m<-as.matrix(x[,-1])
+  rownames(m)<-x[,1]
+  m
+}
+
+##list of all valid color combinations
+bird.list <- sort(unique(birdIDs$mark_id22)) 
+length(bird.list)
+
+# ID's of removed birds removal
+
+
+# list of all possible dyads
+dyad.list <- expand.grid(bird.list, bird.list) #head(dyad.list)
+names(dyad.list) <- c("actor", "subject")
+dyad.list <- subset(dyad.list, actor!=subject)
+dyad.list$dyadID <- paste(dyad.list$actor, dyad.list$subject, sep="-")
+
+# list of days with observations
+obsday.list <- as.character(unique(behave$date)) #only days with observations
+obsday.list.wday <- as.data.frame(obsday.list)
+colnames(obsday.list.wday) <- "date"
+obsday.list.wday$nday <- seq(1:length(obsday.list.wday$date))
+
+
+```
+
+
+## bin level more conservative: removing duplicates by crowds and displacements combined
+```{r Dominance using crowds and displacements more conservative, echo=FALSE}
+#### Remove duplicates for displacements and crowds ####
+
+# filter displacement & crowd data from all data
+aggDC <- behave_totalagg %>%
+  subset(behavior=="displace" | behavior=="crowd" | behavior=="displace_feed" | behavior=="crowd_feed") %>% 
+  dplyr::select(sessionKEY, session_start_timeStamp, bin, date, time, actor, subject, behavior)
+
+str(aggDC)
+length(aggDC$sessionKEY)
+
+# keep only observations where the actor is in the list of bird IDs
+aggDC.goodID <- subset(aggDC, actor %in% bird.list)
+
+# keep only observations where the actor (found above) and the subject are both in the list of bird IDs
+aggDC.goodID <- subset(aggDC.goodID, subject %in% bird.list)
+
+
+## for total agonistic events (crowds and displacements combined)
+#finds n CD and crowds by sessionKEY, date, time, actor, subject, behavior
+dyad.totalagg.key <- aggDC.goodID %>% 
+  dplyr::group_by(sessionKEY, bin, date, time,actor, subject) %>%  # removed , behavior
+  tally() # counts behaviors that were observed within the same minute
+
+#finds max agg per actor by date, time, and behavior type. Return just that summary
+dyad.totalagg.maxkey <- dyad.totalagg.key %>% 
+  group_by(actor, subject,bin,  date, time) %>% # removed behavior, behavior
+  slice(which.max(n)) %>% # n.aggXaggXkey if summarise, n if tally
+  ungroup()
+head(dyad.totalagg.maxkey)
+
+#finds n disps per actor by date for summarized/trimmed data
+dyad.totalaggXbin <- dyad.totalagg.maxkey %>% 
+  group_by(actor, subject, bin) %>% # removed behavior to get total aggression
+  summarise(n.aggXbin=sum(n)) %>% 
+  ungroup()
+head(dyad.totalaggXbin)
+sum(dyad.totalaggXbin$n.aggXbin)
+
+#Here we are interested in total number of interactions instead of chronological #order of interactions. If you require order of interactions, then next steps will #be different from the following setup as you will have to add the behaviors with #n>1 as separate rows. 
+
+## Summarize displacements & crowds combined --> total aggression
+
+head(dyad.totalaggXbin) # crowds and displacement combined from the start, which is more conservative
+str(dyad.totalaggXbin)
+
+# check 
+unique(dyad.totalaggXbin$actor)
+unique(dyad.totalaggXbin$subject)
+
+sum(dyad.totalaggXbin$n.aggXbin)
+
+# summarize total aggression events per day
+sum.aggDCXbin_conservative <-dyad.totalaggXbin %>%
+  group_by(bin) %>%
+  summarize(n.agg = sum(n.aggXbin), n.dyads=length(actor))
+head(sum.aggDCXbin_conservative)
+
+n.aggDC.conservative <- sum(sum.aggDCXbin_conservative$n.agg)
+
+
+#### DOMINANCE RANK BY bin####
+
+head(dyad.totalaggXbin)
+
+# make empty data frame to put data in
+ec_rank <- data.frame(run.code=character(),
+                      bird.list=character(), 
+                      dom_ec=numeric(),
+                      between=numeric())
+
+# run = 1
+
+start.time <- Sys.time()
+
+dyad.totalaggXbin <- dyad.totalaggXbin %>% filter(!is.na(bin))
+
+
+loopby<-unique(dyad.totalaggXbin$bin)
+
+#i=1
+
+for(i in seq_along(unique(dyad.totalaggXbin$bin))){
+  run.code <- loopby[i]
+  print(run.code)
+  run.data <- subset(dyad.totalaggXbin, bin==run.code)
+  
+# number of dyads correct?
+  #length(run.data$actor)
+  #check <- sum.aggXday %>% filter(date==run.code)
+  #head(check)
+  
+allowed <- union(unique(run.data$actor), unique(run.data$subject))
+
+# filter df1 to rows whose actor AND subject are in df2 somewhere
+ddyad.list_filtered <- dyad.list %>%
+  filter(actor %in% allowed & subject %in% allowed)
+ 
+
+bird.list_filtered <- bird.list[bird.list %in% allowed & !is.na(bird.list)]
+
+
+  data_alldyads <- merge(ddyad.list_filtered, run.data, all.x=TRUE,
+                       by=c("actor", "subject")) 
+  
+  #head(data_alldyads)
+  #length(unique(data_alldyads$dyadID)) # with 21 birds should be 420 and with 22 462 dyads
+  
+  data_alldyads$date<-run.code
+  
+ #fill newly-merged data with 0's where no interactions
+ data_alldyads[is.na(data_alldyads)] <- 0
+  
+   #print a check
+  check <- length(data_alldyads$actor)
+  print(check)
+
+# matrix  
+  mx <- reshape2::dcast(data_alldyads, actor~subject, value.var="n.aggXbin") #head(ref.behavior1.mx)
+  mx[is.na(mx)] <- 0 #for linearity measure, matrix needs to be fully filled, no NAs
+  mx <- matrix.please(mx)
+  
+  ## dominance
+dom_ec <- dom_ec(mx)
+
+## Betweenness centrality
+# network
+  graph <- graph_from_adjacency_matrix(mx, "directed", weighted=T, diag=F)
+
+# betweenness centrality
+between <- betweenness(graph, 
+                          directed = TRUE, 
+                          weights = E(graph)$weight)
+
+
+
+# combine in dataframe
+pool <- cbind.data.frame(run.code, 
+                         bird.list_filtered,
+                         dom_ec,
+                         between)
+
+  ec_rank<-rbind(ec_rank, pool )
+
+}
+
+end.time <- Sys.time()
+
+#Time to run:
+end.time - start.time
+
+# check 
+head(ec_rank)
+length(unique(ec_rank$run.code))
+check<-ec_rank %>% group_by(run.code) %>% summarize(length(bird.list_filtered))
+
+ec_rankXbin<-ec_rank %>%
+  rename(bin=run.code, id=bird.list_filtered)
+
+# higher rank is higher position in the hierarchy
+head(ec_rankXbin)
+
+
+ec_rankXbin <- arrange(ec_rankXbin, bin, dom_ec)
+
+MOPA_bin_rank_2022G1 <- ec_rankXbin %>%
+  group_by(bin) %>%
+  mutate(rank = dense_rank(dom_ec)) %>%
+  ungroup()
+
+
+#write.csv(MOPA_bin_rank_2022G1,"MOPA_bin_rank_2022G1.csv", row.names = FALSE)
+
+
+```
+
+#2022G2
+## import data
+```{r data import, echo=FALSE}
+#import data
+behave <- read_csv("2022_interactions_group2.csv") 
+
+unique(behave$date)
+
+
+# period file
+bin.dates <-  read_csv("2022_3daybins.csv") #%>%
+  
+
+# capture file to obtain bird list
+birdIDs<- read_csv("2022_birdIDs.csv") %>%
+  dplyr::select(mark_id22) %>%
+  filter(mark_id22!="") 
+
+
+```
+
+## get data ready 
+
+to compare hierarchy over time include aggression at feeder
+
+```{r}
+# for feeder 
+feed_agg <- c("displace_feed", "crowd_feed", "spar_feed")
+
+# non-feeder aggression
+nonfeed_agg <- c("displace", "crowd", "spar")
+
+# all aggression (both feeders and nonfeeders)
+behave_agg <- behave %>%
+  separate(behavior, c("behavior", "type"), sep="_") # all aggression at both feeders and away from feeders
+
+unique(behave_agg$behavior)
+unique(behave_agg$date)
+
+```
+
+
+##check per perturbation period
+```{r}
+# per 3 day chunks 
+
+bin<- bin.dates %>%
+  dplyr::select(date, bin) 
+
+
+bin$bin <- as.numeric(bin$bin)
+bin$date <- as.Date(bin$date, format = "%m/%d/%Y")
+#use to check all aggression
+behave_totalagg <- left_join(behave, bin, by="date") 
+
+unique(behave_totalagg$bin)
+unique(behave_totalagg$date)
+
+#use if want to check only nonfeeder aggression
+behave_nonfeed <- left_join(behave, bin, by="date") 
+unique(behave_nonfeed$bin)
+unique(behave_nonfeed$date)
+
+
+# 
+# behave_nonfeed <- left_join(behave, bin, by="date") %>%
+#   dplyr::filter(bin==23 | bin==25) # excluding aggression at feeder
+# unique(behave_nonfeed$bin)
+# unique(behave_nonfeed$date)
+
+```
+
+
+## Helper functions & data
+```{r echo=FALSE}
+
+#make matrix function (from dataframe, 1st col with row names)
+matrix.please<-function(x) {
+  m<-as.matrix(x[,-1])
+  rownames(m)<-x[,1]
+  m
+}
+
+##list of all valid color combinations
+bird.list <- sort(unique(birdIDs$mark_id22)) 
+length(bird.list)
+
+# ID's of removed birds removal
+
+
+# list of all possible dyads
+dyad.list <- expand.grid(bird.list, bird.list) #head(dyad.list)
+names(dyad.list) <- c("actor", "subject")
+dyad.list <- subset(dyad.list, actor!=subject)
+dyad.list$dyadID <- paste(dyad.list$actor, dyad.list$subject, sep="-")
+
+# list of days with observations
+obsday.list <- as.character(unique(behave$date)) #only days with observations
+obsday.list.wday <- as.data.frame(obsday.list)
+colnames(obsday.list.wday) <- "date"
+obsday.list.wday$nday <- seq(1:length(obsday.list.wday$date))
+
+
+```
+
+
+## bin level more conservative: removing duplicates by crowds and displacements combined
+```{r Dominance using crowds and displacements more conservative, echo=FALSE}
+#### Remove duplicates for displacements and crowds ####
+
+# filter displacement & crowd data from all data
+aggDC <- behave_totalagg %>%
+  subset(behavior=="displace" | behavior=="crowd" | behavior=="displace_feed" | behavior=="crowd_feed") %>% 
+  dplyr::select(sessionKEY, session_start_timeStamp, bin, date, time, actor, subject, behavior)
+
+str(aggDC)
+length(aggDC$sessionKEY)
+
+# keep only observations where the actor is in the list of bird IDs
+aggDC.goodID <- subset(aggDC, actor %in% bird.list)
+
+# keep only observations where the actor (found above) and the subject are both in the list of bird IDs
+aggDC.goodID <- subset(aggDC.goodID, subject %in% bird.list)
+
+
+## for total agonistic events (crowds and displacements combined)
+#finds n CD and crowds by sessionKEY, date, time, actor, subject, behavior
+dyad.totalagg.key <- aggDC.goodID %>% 
+  dplyr::group_by(sessionKEY, bin, date, time,actor, subject) %>%  # removed , behavior
+  tally() # counts behaviors that were observed within the same minute
+
+#finds max agg per actor by date, time, and behavior type. Return just that summary
+dyad.totalagg.maxkey <- dyad.totalagg.key %>% 
+  group_by(actor, subject,bin,  date, time) %>% # removed behavior, behavior
+  slice(which.max(n)) %>% # n.aggXaggXkey if summarise, n if tally
+  ungroup()
+head(dyad.totalagg.maxkey)
+
+#finds n disps per actor by date for summarized/trimmed data
+dyad.totalaggXbin <- dyad.totalagg.maxkey %>% 
+  group_by(actor, subject, bin) %>% # removed behavior to get total aggression
+  summarise(n.aggXbin=sum(n)) %>% 
+  ungroup()
+head(dyad.totalaggXbin)
+sum(dyad.totalaggXbin$n.aggXbin)
+
+#Here we are interested in total number of interactions instead of chronological #order of interactions. If you require order of interactions, then next steps will #be different from the following setup as you will have to add the behaviors with #n>1 as separate rows. 
+
+## Summarize displacements & crowds combined --> total aggression
+
+head(dyad.totalaggXbin) # crowds and displacement combined from the start, which is more conservative
+str(dyad.totalaggXbin)
+
+# check 
+unique(dyad.totalaggXbin$actor)
+unique(dyad.totalaggXbin$subject)
+
+sum(dyad.totalaggXbin$n.aggXbin)
+
+# summarize total aggression events per day
+sum.aggDCXbin_conservative <-dyad.totalaggXbin %>%
+  group_by(bin) %>%
+  summarize(n.agg = sum(n.aggXbin), n.dyads=length(actor))
+head(sum.aggDCXbin_conservative)
+
+n.aggDC.conservative <- sum(sum.aggDCXbin_conservative$n.agg)
+
+
+#### DOMINANCE RANK BY bin####
+
+head(dyad.totalaggXbin)
+
+# make empty data frame to put data in
+ec_rank <- data.frame(run.code=character(),
+                      bird.list=character(), 
+                      dom_ec=numeric(),
+                      between=numeric())
+
+# run = 1
+
+start.time <- Sys.time()
+
+dyad.totalaggXbin <- dyad.totalaggXbin %>% filter(!is.na(bin))
+
+
+loopby<-unique(dyad.totalaggXbin$bin)
+
+#i=1
+
+for(i in seq_along(unique(dyad.totalaggXbin$bin))){
+  run.code <- loopby[i]
+  print(run.code)
+  run.data <- subset(dyad.totalaggXbin, bin==run.code)
+  
+# number of dyads correct?
+  #length(run.data$actor)
+  #check <- sum.aggXday %>% filter(date==run.code)
+  #head(check)
+  
+allowed <- union(unique(run.data$actor), unique(run.data$subject))
+
+# filter df1 to rows whose actor AND subject are in df2 somewhere
+ddyad.list_filtered <- dyad.list %>%
+  filter(actor %in% allowed & subject %in% allowed)
+ 
+
+bird.list_filtered <- bird.list[bird.list %in% allowed & !is.na(bird.list)]
+
+
+  data_alldyads <- merge(ddyad.list_filtered, run.data, all.x=TRUE,
+                       by=c("actor", "subject")) 
+  
+  #head(data_alldyads)
+  #length(unique(data_alldyads$dyadID)) # with 21 birds should be 420 and with 22 462 dyads
+  
+  data_alldyads$date<-run.code
+  
+ #fill newly-merged data with 0's where no interactions
+ data_alldyads[is.na(data_alldyads)] <- 0
+  
+   #print a check
+  check <- length(data_alldyads$actor)
+  print(check)
+
+# matrix  
+  mx <- reshape2::dcast(data_alldyads, actor~subject, value.var="n.aggXbin") #head(ref.behavior1.mx)
+  mx[is.na(mx)] <- 0 #for linearity measure, matrix needs to be fully filled, no NAs
+  mx <- matrix.please(mx)
+  
+  ## dominance
+dom_ec <- dom_ec(mx)
+
+## Betweenness centrality
+# network
+  graph <- graph_from_adjacency_matrix(mx, "directed", weighted=T, diag=F)
+
+# betweenness centrality
+between <- betweenness(graph, 
+                          directed = TRUE, 
+                          weights = E(graph)$weight)
+
+
+
+# combine in dataframe
+pool <- cbind.data.frame(run.code, 
+                         bird.list_filtered,
+                         dom_ec,
+                         between)
+
+  ec_rank<-rbind(ec_rank, pool )
+
+}
+
+end.time <- Sys.time()
+
+#Time to run:
+end.time - start.time
+
+# check 
+head(ec_rank)
+length(unique(ec_rank$run.code))
+check<-ec_rank %>% group_by(run.code) %>% summarize(length(bird.list_filtered))
+
+ec_rankXbin<-ec_rank %>%
+  rename(bin=run.code, id=bird.list_filtered)
+
+# higher rank is higher position in the hierarchy
+head(ec_rankXbin)
+
+
+ec_rankXbin <- arrange(ec_rankXbin, bin, dom_ec)
+
+MOPA_bin_rank_2022G2 <- ec_rankXbin %>%
+  group_by(bin) %>%
+  mutate(rank = dense_rank(dom_ec)) %>%
+  ungroup()
+
+
+#write.csv(MOPA_bin_rank_2022G2,  "MOPA_bin_rank_2022G2.csv", row.names = FALSE)
+
+
+```
