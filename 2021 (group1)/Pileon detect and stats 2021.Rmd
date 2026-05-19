@@ -1,0 +1,1221 @@
+---
+title: "Pileon detect and stats 2021"
+author: 
+date: 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Load packages
+```{r}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(data.table) 
+library(ggplot2)
+library(chemodiv)
+library(introdataviz)
+library(lme4)
+library(multcomp)
+library(sjPlot)
+library(emdist)
+library(purrr)
+library(EloRating)
+library(tibble)
+library(here)
+
+```
+
+
+
+#Data cleaning chunk 1. Here and in the next several data cleaning chunks we are getting rid of duplicate observations, unknown behaviors, and dealing with undirected behaviors
+```{r}
+#create matrix function for later
+matrix.please<-function(x) {
+  m<-as.matrix(x[,-1])
+  rownames(m)<-x[,1]
+  m
+}
+
+#load data
+`2021_interactions_raw` <- read_csv("2021_interactions_raw.csv")
+raw.allbehavedata <- `2021_interactions_raw`
+
+
+
+birdIDs_capture <- read_csv("2021_birdIDs.csv") 
+birdIDs <- birdIDs_capture %>%
+  dplyr::select(mark_id3) %>%
+  filter(mark_id3!="") # all  birds MAKE SURE RIGHT COLUMN FOR EACH YEAR DATA
+
+
+
+
+
+bird.list <- sort(unique(birdIDs$mark_id3)) # ensure that correct column is selected
+length(bird.list)
+bird.list
+length(bird.list)
+# list of all possible dyads
+dyad.list <- expand.grid(bird.list, bird.list) #head(dyad.list)
+names(dyad.list) <- c("actor", "subject")
+dyad.list <- subset(dyad.list, actor!=subject)
+dyad.list$dyadID <- paste(dyad.list$actor, dyad.list$subject, sep="-")
+# list of days with observations
+obsday.list <- as.character(unique(raw.allbehavedata$date)) #only days with observations
+obsday.list.wday <- as.data.frame(obsday.list)
+colnames(obsday.list.wday) <- "date"
+obsday.list.wday$nday <- seq(1:length(obsday.list.wday$date))
+
+```
+#Data cleaning chunk 2; "other" and "unknown" behaviors
+```{r}
+behave<-raw.allbehavedata 
+unique(behave$behavior)
+# other
+behave.other<-filter(behave, behavior=="other") %>% dplyr::select(-behavior) %>%
+  rename(behavior=other) %>%
+  dplyr::select(orderkey, sessionKEY, session_start_timeStamp, date, full_time, time, actor, subject, behavior, everything())
+behave.exl.other<-filter(behave, behavior!="other") %>% 
+  dplyr::select(-other)
+behave.goodother<-bind_rows(behave.exl.other, behave.other)
+# unknown
+behave.unknown <- filter(behave.goodother, behavior=="unknown") 
+behave.unknown$behavior[behave.unknown$behavior=="unknown"] <-"unk"
+behave.unknown <- behave.unknown %>%
+  unite(behavior, behavior, unknown, sep = "_")
+behave$behavior[behave$behavior=="unk agonistic"] <-"unk_agonistic"
+behave.exl.unk<-behave.goodother %>% filter(behavior!="unknown") %>%
+  dplyr::select(-unknown)
+behave.goodunk<-bind_rows(behave.unknown, behave.exl.unk)
+behave<-behave.goodunk
+head(behave)
+
+
+
+
+```
+
+#Data cleaning chunk 3; prepare cleaned df
+```{r}
+# keep only observations where the actor is in the list of bird IDs
+behave.goodID <- subset(behave, actor %in% bird.list)
+# keep only observations where the actor (found above) and the subject are both in the list of bird IDs
+behave.goodID <- subset(behave.goodID, subject %in% bird.list)
+#finds n behaviors by sessionKEY, date, time, actor, subject, behavior
+behave.key <- behave.goodID %>% 
+  dplyr::group_by(sessionKEY, date, full_time,actor, subject, behavior) %>% 
+  tally() # counts behaviors that were observed within the same minute
+#finds max n behaviors per actor by date, time, and behavior type. Return just that summary
+behave.maxkey<- behave.key %>% 
+  group_by(actor, subject, date, full_time, behavior) %>%
+  slice(which.max(n)) %>% # n.aggXaggXkey if summarise, n if tally
+  ungroup()
+head(behave.maxkey)
+#finds n disps per actor by date for summarized/trimmed data
+behaveXday <- behave.maxkey %>% 
+  group_by(actor, subject, date, full_time, behavior) %>% 
+  summarise(n=sum(n))
+head(behaveXday)
+min(behaveXday$n)
+
+
+
+
+
+unique(behaveXday$behavior)
+# behaviors in long format (1 event at a time)
+behaveXday.long <- behaveXday %>%
+  uncount(n) %>%
+  mutate(n=1)
+sum(behaveXday.long$n)
+sum(behaveXday$n)
+head(behaveXday.long)
+## DUPLICATE UNDIRECTED BEHAVIORS
+# filter the undirected behaviors 
+behaveXday.undirected <- behaveXday.long %>% 
+  filter(grepl(pattern="each other",tolower(behavior)))
+  
+behaveXday.undirected1 <-behaveXday.long %>%
+  filter( behavior=="s2s") # spar as well?
+behaveXday.undirected <- bind_rows(behaveXday.undirected,behaveXday.undirected1 )
+# duplicate undirected dataframe and change subject and actor
+behaveXday.undirected.dupl <- behaveXday.undirected %>%
+  rename(subject=actor, actor=subject) %>%
+  dplyr::select(actor, subject, everything())
+# bind both dataframes
+behaveXday.directed.comb <- bind_rows(behaveXday.undirected, behaveXday.undirected.dupl) 
+behaveXday.undir2dir <- behaveXday.directed.comb %>%
+  separate( behavior,into = c("behavior", "direction"), sep = "_") %>%
+  dplyr::select(-direction)
+unique(behaveXday.undir2dir$behavior)
+## COMBINE DATAFRAMES
+# bind to directed dataframe
+behaveXday.directed <- behaveXday.long %>% 
+  filter(!grepl(pattern="each other",tolower(behavior)) & behavior!="s2s")
+unique(behaveXday.directed$behavior)
+behaveXday.directed <- bind_rows(behaveXday.directed, behaveXday.undir2dir)
+behaveXday.directed$behavior[behaveXday.directed$behavior=="NN"] <- "nn"
+behaveXday.directed$behavior[behaveXday.directed$behavior=="alloP"] <- "allop"
+behaveXday.directed$behavior[behaveXday.directed$behavior=="allopreen"] <- "allop"
+length(behaveXday.directed$actor)
+unique(behaveXday.directed$behavior)
+
+#view completed df
+head(behaveXday.directed)
+
+
+```
+
+
+
+#prepare df (filter by behavior type and date and attach ranks)
+```{r}
+#filter out non aggression data
+'t2021_aggression_only' <- filter(behaveXday.directed, behavior %in% c("crowd","displace", "chase"))
+
+
+#subset for time period of interest (Here we are subsetting for the first stable period after group formation)
+t2021_aggression_only_ready <- t2021_aggression_only[t2021_aggression_only$date >= "2021-05-15" & t2021_aggression_only$date <= "2021-05-18	", ]
+
+#ensure dates are date
+t2021_aggression_only_ready <- t2021_aggression_only %>% 
+  filter(date >= as.Date("2021-05-15"),
+         date <= as.Date("2021-05-18"))
+
+
+#attach ranks onto df
+#load in the bird power score ranks
+mopa_power_2021 <- read_csv("MOPA_bin_rank_2021_test.csv")
+#subset for appropriate bin
+mopa_power_2021 <- subset(mopa_power_2021, bin == 2)
+#keep only rank and birdID
+mopa_power_2021 <- mopa_power_2021 %>% 
+  dplyr::select(id, rank)
+# join rank to actor and subject on aggression df
+
+unordered_both_numbered <- t2021_aggression_only_ready %>%
+  left_join(mopa_power_2021, by = c("actor" = "id")) %>%
+  rename(actor_rank = rank) %>%              
+  left_join(mopa_power_2021, by = c("subject" = "id")) %>%
+  rename(subject_rank = rank)          
+
+
+
+#order df correctly by time and date
+both_numbered_sorted <- unordered_both_numbered %>%
+  arrange(unordered_both_numbered$date, unordered_both_numbered$full_time)
+
+#ensure that rank is numeric
+both_numbered_sorted$actor_rank <- as.numeric(both_numbered_sorted$actor_rank)
+both_numbered_sorted$subject_rank <- as.numeric(both_numbered_sorted$subject_rank)
+
+head(both_numbered_sorted)
+length(both_numbered_sorted$full_time)
+```
+
+
+
+#Attach observation session to df to allow for permuting within observation sessions
+```{r}
+head(both_numbered_sorted)
+
+both_numbered_sorted <- ungroup(both_numbered_sorted)
+
+#procedure to add obs session
+
+#store the first row as a separate df. It will be binded back on later 
+row_1_obs <- both_numbered_sorted[1,]
+
+#put events side by side. This will allow us to subtract consecutive times from one another to determine whether an event took place on a separate observation session. 
+obs_period_pt_1 <- mutate(both_numbered_sorted, actor_2 = lead(actor),
+actor_2_rank = lead(actor_rank), 
+subject_2 = lead(subject),                                   
+subject_2_rank = lead(subject_rank), 
+ full_time_2 = lead(full_time), 
+date2 = lead(date))
+
+#add empty columns for observation period and date period
+obs_period_pt_1$obs_period <- NA
+obs_period_pt_1$date_period <- NA
+
+#create ticker for loop
+q <- 1
+
+#loop to calculate observation sessions. If consecutive events were on the same day but there was a long time between events, it is determined that the 2nd event took place in a separate observation session. The ticker goes up, and is reset if events took place on different days.
+for (i in 1:nrow(obs_period_pt_1)) {ifelse(obs_period_pt_1$date[i] == obs_period_pt_1$date2[i]
+                                            & obs_period_pt_1$full_time_2[i] - obs_period_pt_1$full_time[i] >= 2100, q <- q+1, q <- q)
+  ifelse(obs_period_pt_1$date[i] != obs_period_pt_1$date2[i], q <- 1, q <- q)
+  obs_period_pt_1$obs_period [i] <- q
+  }
+
+#remove original columns and keep mutated columns. These will replace original columns
+obs_period_pt_2 <- subset(obs_period_pt_1, select = c(date2,  full_time_2, actor_2, actor_2_rank, subject_2, subject_2_rank, obs_period, date_period  ))
+
+#get rid of the bottom, which will be full of NAs, as the last event in the original data does not have anything that comes after
+obs_period_pt_3 <- slice(obs_period_pt_2, 1:(n() - 1))
+
+#rename mutated columns with original names 
+setnames(obs_period_pt_3, old = c('date2',  'full_time_2', 'actor_2', 'actor_2_rank', 'subject_2', 'subject_2_rank'), 
+         new = c('date',  'full_time', 'actor', 'actor_rank', 'subject', 'subject_rank'))
+
+#add observation period "1" onto first row that we subseted off, as the first event in the data has to take place in obs session 1
+row_1_obs$obs_period <- 1 
+row_1_obs$date_period <- NA
+
+#ensure that row 1 matches the df
+row_1_obs_ready <-  subset(row_1_obs, select = c(date,  full_time, actor, actor_rank, subject, subject_rank, obs_period, date_period  ))
+
+#bind first row and df together
+obs_period_pt_4 <- rbind(row_1_obs_ready, obs_period_pt_3)
+#add date period 
+obs_period_pt_4$date_period <- paste(obs_period_pt_4$date,obs_period_pt_4$obs_period)
+
+
+
+
+head(obs_period_pt_4)
+#arrange by date and time
+obs_period_pt_4 <- arrange(obs_period_pt_4, date, full_time)
+
+
+str(obs_period_pt_4)
+```
+
+
+
+#Separate main df into a list of dfs. Each df contains data for each respective bird in each respective observation session 
+```{r}
+head(obs_period_pt_4)
+
+#Prepare/order and give each row an id and numeric time
+df <- obs_period_pt_4 %>%
+  arrange(date_period, date, full_time) %>%
+  mutate(.row = row_number(),
+         tsec = as.numeric(full_time))  # seconds since midnight
+
+#Create previous by actor columns. These are used to identify aggressive events that occur within 60 sec (may represent chase)  
+by_actor <- df %>%
+  group_by(date_period, actor) %>%
+  mutate(prev_subj_by_actor = lag(subject),
+         prev_tsec_by_actor = lag(tsec)) %>%
+  ungroup()
+
+#Last involvement time for each bird (actor or subject) 
+#Build a long view with one entry per participant per event
+long <- bind_rows(
+  by_actor %>% transmute(date_period, .row, participant = actor, tsec),
+  by_actor %>% transmute(date_period, .row, participant = subject, tsec)
+) %>%
+  arrange(date_period, tsec, .row) %>%
+  group_by(date_period, participant) %>%
+  mutate(prev_involve_tsec = lag(tsec)) %>%
+  ungroup()
+
+#For each original row get the most recent involvement of either bird A or bird B before this row
+last_involve <- long %>%
+  group_by(date_period, .row) %>%
+  summarise(last_involve_tsec = max(prev_involve_tsec, na.rm = TRUE), .groups = "drop") %>%
+  mutate(last_involve_tsec = ifelse(is.finite(last_involve_tsec), last_involve_tsec, NA_real_))
+
+#Apply rule of getting rid of consecutive 60 sec possible chases
+aggression_no_repeat_custom <- by_actor %>%
+  left_join(last_involve, by = c("date_period", ".row")) %>%
+  mutate(
+    #Base repeat condition. check if previous by same actor is the same subject and within 60s
+    within_actor_repeat = !is.na(prev_tsec_by_actor) &
+                          subject == prev_subj_by_actor &
+                          (tsec - prev_tsec_by_actor) <= 60,
+
+    #Check was there an intervening event involving bird A or bird B after  previous A to B
+    interrupted_by_A_or_B = within_actor_repeat &
+                            !is.na(last_involve_tsec) &
+                            (last_involve_tsec > prev_tsec_by_actor),
+
+    keep = !within_actor_repeat | interrupted_by_A_or_B
+  ) %>%
+  filter(keep) %>%
+dplyr::select(-.row, -tsec,
+         -prev_subj_by_actor, -prev_tsec_by_actor,
+         -last_involve_tsec, -within_actor_repeat, -interrupted_by_A_or_B, -keep)
+
+
+obs <- aggression_no_repeat_custom$date_period
+#separate data into a list with each df=a date 
+
+
+#create empty list to store each bird each day each obs
+datelist__pile <- list()
+actor <- unique(t2021_aggression_only_ready$actor)
+
+dater <- unique(obs)
+datex <- c(1: length(unique(obs)))
+actorer <- actor
+actex <- c(1:length(actor))
+
+
+
+
+
+
+
+#separate data into list of each obs session each day for each obs
+for(i in datex) { 
+  output <- filter(aggression_no_repeat_custom, aggression_no_repeat_custom$date_period == dater[i])
+  datelist__pile[[i]] <- output}
+
+
+```
+
+
+
+
+
+#Put events side by side
+```{r}
+
+#ensure df arranged by date and time
+datelist__pile <- lapply(datelist__pile, function(x) arrange(x, date, full_time))
+
+#put df side by side
+datelist__pile_2021 <- lapply(datelist__pile, function(x) mutate(x, actor_2 = lead(actor), subject_2 = lead(subject), 
+                                                                         full_time_2 = lead(full_time), actor_2_rank = lead(actor_rank), subject_2_rank = lead(subject_rank), date2 = lead(date)))
+```
+
+#Response Motif Speed
+```{r}
+#######################################################################################################
+
+#follows similar procedure as calculating the count of response motif execution events for a respective rule , with some differences in the rule detection loop and the structure
+
+#counter identifies the focal individual for each dataframe after the
+#master interaction dataframe is split into individual level dfs.
+#Each df contains all events involving that individual (in any role).
+#Using counter ensures that sequential behvaioral sequences are evaluated from the
+#correct individual’s perspective, reducing false positives that could
+#occur if a pattern appears in one df but is actually explained by
+#interactions only visible in another individual’s df.
+
+#For example in individual A’s df we might see A attack B, then B attacks A, which appears to be retaliation. However, A’s df only includes interactions involving A and cannot show
+# whether B interacted with others in between the initiating event and the aggressive response.
+#If we look at B’s df (counter == B), we might see that the full sequence is A defeats B, then B defeats C, then B defeats A. Because B interacted with C before responding to A, the sequence was
+#interrupted and is not counted as the response motif for retaliation. This interruption is invisible in A’s df and would create a false positive, which is why rules must be evaluated in the correct
+# counter (focal individual) dataframe.
+
+# In this loop initiated marks whether the focal individual was the subject. rule_followed indicates that the behavioral and time constraint patterns associated with a certain rule's response motif were followed and that the focal individual (counter) is correctly involved
+
+
+
+#test for length of pile in seconds
+pile_side_by_side_tested_time_2021 <- map(datelist__pile_2021, ~ mutate(.x, initiated = "yes", 
+                                      rule_followed = ifelse( subject == subject_2
+                                                              & actor != actor_2
+                                                              & full_time_2 - full_time > 0
+                                                              & date2 == date,
+                                                              "yes","no"), time_to_pile = full_time_2 - full_time))
+
+
+#bind list of dfs into one df
+ pile_huge_time_2021 <- bind_rows(pile_side_by_side_tested_time_2021, .id = "column_label")
+
+#sort by time and date
+ pile_huge_time_2021_sorted <- pile_huge_time_2021 %>%
+   arrange(pile_huge_time_2021$date, pile_huge_time_2021$full_time)
+ 
+#remove any duplicate or double counted events 
+ pile_huge_time_2021_sorted_no_dupr <- subset(pile_huge_time_2021_sorted, initiated != "no") 
+ 
+ #subset for columns of interest
+ pile_huge_time_2021_sorted_no_dupr <- subset(pile_huge_time_2021_sorted_no_dupr, select = c(date, full_time, actor, actor_rank, subject, subject_rank, 
+                                                                         actor_2, actor_2_rank, subject_2, subject_2_rank, full_time_2, date2, 
+                                                                         initiated, rule_followed, time_to_pile, date_period))
+ 
+#get df where motif was executed
+pile_length_2021 <- subset(pile_huge_time_2021_sorted_no_dupr, rule_followed != "no")
+
+#subset for columns of interest
+pile_length_ready_2021 <- subset( pile_length_2021, select = c(time_to_pile, actor, subject, actor_2, subject_2, date_period))
+
+
+#obtain value for number of times motif was executed
+pi <- length(pile_length_ready_2021$time_to_pile)
+
+
+#summarize the speed of motif execution Here we are checking whether the speed of the motifs in question tends to be clustered
+summary.pile <- pile_length_ready_2021 %>% group_by(time_to_pile) %>%
+  summarize (
+    count =n())
+
+
+summary.pile
+
+
+#quick glimpses of the distribution of motif speeds
+ggplot(pile_length_ready_2021, aes(x=time_to_pile)) + 
+  geom_histogram(aes(y=..density..),      
+                 binwidth=10,
+                 colour="black", fill="white") + 
+  geom_density() +  scale_x_continuous(name = "length in s of pile on events", limits = c(0,3000)) 
+
+
+
+
+
+```
+
+
+#Randomize motif speed
+```{r}
+
+
+
+
+#randomize time between initiation and response between events
+
+#Loop to detect instances and speed of motif execution for the rule in question 
+pile_side_by_side_tested_time_2021 <- map(datelist__pile_2021, ~ mutate(.x, initiated = "yes", 
+                                      rule_followed = ifelse( subject == subject_2
+                                                              & actor != actor_2
+                                                              & full_time_2 - full_time > 0
+                                                              & date2 == date,
+                                                              "yes","no"), time_to_pile = full_time_2 - full_time))
+
+
+
+
+
+
+
+
+#mark true pile ons. This way we can randomize time between events while having pileon pre marked, as the detection of pileon requires testing before splitting df by bird and date
+pile_side_by_side_tested_time_2021_marked <- map(pile_side_by_side_tested_time_2021, ~ mutate(.x, t.o.f = ifelse(rule_followed == "yes", "true","false")))
+
+pile_side_by_side_tested_time_2021_marked_sub <- c()
+
+#remove mutated columns
+for (i in datex){
+  pile_side_by_side_tested_time_2021_marked_sub[[i]] <- subset(pile_side_by_side_tested_time_2021_marked[[i]], select = -c(actor_2, subject_2, actor_2_rank, subject_2_rank, full_time_2, date2, initiated, rule_followed ) )
+}
+
+
+
+
+
+#separate data into list of each obs session each day for each bird
+actorer <- actor
+actex <- c(1:length(actor))
+dater <- unique(obs)
+list_split_by_bird_time <- c()
+
+for(i in datex) {
+for (g in actex) {output <- subset(pile_side_by_side_tested_time_2021_marked_sub[[i]], actor == actorer[g] |  subject == actorer[g])
+   if (nrow(output) < 1) {output [ nrow(output) + 1 , ] <- NA
+    } 
+  output <- mutate(output, counter = actorer[g])
+  list_split_by_bird_time[[paste0("list", dater[i], actorer[g])]] <- output
+}}
+
+ 
+  #arrange by time and date
+list_split_by_bird_time <- lapply(list_split_by_bird_time, function(x) arrange(x, date, full_time))
+
+
+   #put events side by side
+   pile_time_by_side_2021 <- lapply(list_split_by_bird_time, function(x) mutate(x, actor_2 = lead(actor), 
+                                                                                    actor_2_rank = lead(actor_rank), 
+                                                                                    subject_2 = lead(subject), 
+                                                                                    subject_2_rank = lead(subject_rank), 
+                                                                                    full_time_2 = lead(full_time), 
+                                                                                    date2 = lead(date)))
+
+
+   
+   pile_time_by_side_2021<- pile_time_by_side_2021 [sapply(pile_time_by_side_2021, nrow)>0]
+
+
+  
+#pick out true pile on motif execution while keeping all dataframes in a list and calculating speed
+pile_time_by_side_tested_2021 <- map(pile_time_by_side_2021, ~ mutate(.x, initiated = ifelse( subject == counter, "yes","no"), 
+                                      rule_followed = ifelse( subject == subject_2
+                                                              & actor != actor_2
+                                                              & full_time_2 - full_time > 0
+                                                              & date2 == date
+                                                              & subject == counter
+                                                              & subject_2 == counter
+                                                              & t.o.f == "true",
+                                                              "yes","no"), time_to_pile = full_time_2 - full_time))
+
+ 
+   #remove NAs
+  pile_time_by_side_tested_2021_no_na <- lapply(pile_time_by_side_tested_2021, function(x) na.omit(x))
+   
+pilelisttimelength2021 <- as.numeric(length(pile_time_by_side_tested_2021_no_na))
+datex3 <- 1:pilelisttimelength2021  
+  
+    #split into df for each obs session
+for (i in datex3) {
+  pile_time_by_side_tested_2021_no_na[[i]]$time_to_pile <- as.numeric(pile_time_by_side_tested_2021_no_na[[i]]$time_to_pile)
+  
+}
+
+
+
+
+#Bind list of dfs into one df
+pile_side_by_side_tested_time_2021_binded <- bind_rows(pile_time_by_side_tested_2021_no_na)
+
+
+#Remove duplicate and double counted sequences
+pile_side_by_side_tested_time_2021_binded <- distinct(pile_side_by_side_tested_time_2021_binded, date, full_time, actor, actor_rank, subject, subject_rank, obs_period, date_period, actor_2, subject_2, full_time_2, date2, time_to_pile, .keep_all= TRUE) 
+
+
+
+#remove instances of motif execution whos speed were calculated to be 0. In this case we cant be certain of which event actually came first
+pile_side_by_side_tested_time_2021_binded <- filter(pile_side_by_side_tested_time_2021_binded, time_to_pile != 0)
+
+
+date_x <- pile_side_by_side_tested_time_2021_binded$date
+obs <- pile_side_by_side_tested_time_2021_binded$date_period
+#separate data into a list with each df= a date to randomize within days
+
+
+pile_side_by_side_tested_time_2021_list <- list()
+dater <- unique(obs)
+datex <- c(1: length(unique(obs)))
+
+#loop to create a separate dataframe for of each obs session each day 
+#Each dataframe is stored within a list to make the dataframes easier to work with
+#We conserve our permutation randomizations later within days and, more specifically, within observation sessions
+for(i in datex) { 
+  output <- filter(pile_side_by_side_tested_time_2021_binded, pile_side_by_side_tested_time_2021_binded$date_period == dater[i] )
+   if (nrow(output) < 1) {output [ nrow(output) + 1 , ] <- NA
+    } 
+      pile_side_by_side_tested_time_2021_list[[paste0("list", dater[i])]] <- output}
+
+
+
+
+
+nruns <- 1000
+
+pb = txtProgressBar(min=0, max = nruns, style = 3)
+
+#run ids should be 1 through however many times you want to run through the permutation
+runIDs <- seq(1,1000)
+
+#create an empty masterframe to be filled with each run of the permutation
+masterframe_pileon.df_time_2021 <- data.frame(runIDs = character(),
+                             actor = character(),
+                             subject = character(),
+                             date = character(),
+                             full_time = integer(),
+                             counter = character(),
+                             actor_2 = character(),
+                             subject_2 = character(),
+                             full_time_2 = integer(),
+                             date2 = character(),
+                             initiated = character(),
+                             rule_followed = character(),
+                             time_to_pile = integer(),
+                            date_period = character(),
+                             stringsAsFactors=FALSE)
+
+
+set.seed(18)
+#forloop starts here'
+for (r in 1:length(runIDs)) { #r = 1 is a test we can uncomment to see if it works before running 
+#r = 1
+  run <- r
+      setTxtProgressBar(pb, r) #update progress bar
+  loop.run <- paste("run", run) 
+  loop.run
+  #for example, if r = 1, looprun will say run 1 which allows us to keep each run's data straight
+  
+    
+
+  
+  #renamed data
+  loop.datalist <- pile_side_by_side_tested_time_2021_list
+    head(loop.datalist[[3]])
+    xorder <- c()
+  listlength <- as.numeric(length(loop.datalist))
+datex2 <- 1:listlength
+  full_time_to_rule <-c()
+  loop.data.randomized.time_to_rule.added <- c()
+    
+    
+
+  for(i in datex2) {
+         #store time
+     full_time_to_rule[[i]] <- subset(loop.datalist[[i]], select = c(time_to_pile))     
+     #remove time from each df in the list. randomizing the order of time wouldnt make sense
+     loop.datalist[[i]] <- subset(loop.datalist[[i]], select = -c(time_to_pile))
+      #create a randomized sequence of numbers to bind to the subset data (ex. 2,6,1,3,5,4)
+      #sort the data frame to put the randomized numbers in order from 1 to the max which results in the time between events (speed) has been  randomized (ex. from above 1,2,3,4,5,6)
+    xorder[[i]] <- data.frame(xorder = sample(1:length(full_time_to_rule[[i]]$time_to_pile),
+                                              length(full_time_to_rule[[i]]$time_to_pile)))
+    #bind random order to df
+    full_time_to_rule[[i]] <- mutate(full_time_to_rule[[i]], 
+                                 xorderx = xorder[[i]]$xorder)
+    #put randomized order of numbers in order to randomize speed in the dataset
+    full_time_to_rule[[i]] <-
+      full_time_to_rule[[i]][order(full_time_to_rule[[i]]$xorderx),]
+    #bind time back on
+    loop.data.randomized.time_to_rule.added[[i]] <- bind_cols(loop.datalist[[i]], full_time_to_rule[[i]])
+    loop.data.randomized.time_to_rule.added[[i]] <- subset(loop.data.randomized.time_to_rule.added[[i]], select = -c(xorderx))
+
+   }
+  
+
+  
+  
+  
+  
+  
+  
+  
+
+#combine dataframes into one huge dataframe
+loop.datalist_time_randomized_binded_tested_pile_2021 <- bind_rows(loop.data.randomized.time_to_rule.added, .id = "column_label")
+
+
+ 
+
+#sort by time and date
+loop.datalist_time_randomized_binded_tested_pile_2021 <- loop.datalist_time_randomized_binded_tested_pile_2021 %>%
+  arrange(loop.datalist_time_randomized_binded_tested_pile_2021$date, loop.datalist_time_randomized_binded_tested_pile_2021$full_time)
+
+
+
+
+
+
+#Remove duplicate events, events that have been represented twice, and events that could not confidently be counted as the start of pileon
+testhugesorted_no_dup_rand_time <- subset(loop.datalist_time_randomized_binded_tested_pile_2021, initiated != "no") 
+
+pileon_no_dup_rand_time <- subset(testhugesorted_no_dup_rand_time, select = c(date, full_time, actor, subject, 
+                                                               counter, actor_2, subject_2, full_time_2, date2, 
+                                                               initiated,  rule_followed,time_to_pile, date_period))
+
+
+
+
+
+  
+  #end of pileon process
+  #end of rule code
+  
+  
+  
+   #bind vector of run IDs for each run to the dataframe to have a numeric run id next to each data point that corresponds with that run which will allow us to sort them in ascending order later
+ runIDs <- rep(loop.run, length(pileon_no_dup_rand_time$actor))
+ 
+  pileon_complete_rand_time_2021 <- cbind(runIDs, pileon_no_dup_rand_time)
+  
+  
+#put each runs data into the masterframe
+  masterframe_pileon.df_time_2021 <- rbind(masterframe_pileon.df_time_2021, pileon_complete_rand_time_2021)
+  
+}
+
+
+
+
+
+#write.csv(masterframe_pileon.df_time_2021,"pile2021timemaster.csv", row.names = FALSE)
+
+
+
+
+
+```
+
+#Compare observed speed to random
+```{r}
+
+#masterframe_pileon.df_time_2021 <- read_csv("pile2021timemaster.csv")
+#raw data 
+
+head(masterframe_pileon.df_time_2021)
+
+#subset masterframe so that only motifs associated with rules are included
+masterframe_pileon.df_time_2021_only_follows <- subset(masterframe_pileon.df_time_2021, rule_followed == "yes" )
+
+#isolate time it takes to execute a motif
+masterframe_pileon_time_sub.df_2021 <- subset( masterframe_pileon.df_time_2021_only_follows, select = c(actor, subject, actor_2,subject_2, time_to_pile,date_period))
+head(masterframe_pileon_time_sub.df_2021)
+
+
+
+#add data label for the randomized motif speed
+masterframe_pileon_time_ready.df <- mutate(masterframe_pileon_time_sub.df_2021, data_type = "randomized")
+
+#ensure that time is numeric
+masterframe_pileon_time_ready.df$time_to_pile <- as.numeric(masterframe_pileon_time_ready.df$time_to_pile)
+
+
+head(pile_length_ready_2021)
+
+#add data label for the observed motif speed
+pile_length_ready_2021_label <- mutate(pile_length_ready_2021, data_type = "observed")
+
+
+#combine df for observed motif speed and randomized motif speed into one df
+pile_length_ready_2021_comb <- rbind(masterframe_pileon_time_ready.df, pile_length_ready_2021_label )
+unique(pile_length_ready_2021_comb$data_type)
+
+
+
+
+#provide label for motif in question
+pile_length_ready_2021_comb <- mutate(pile_length_ready_2021_comb, rule = "pileon")
+
+
+#make sure that motif speed is numeric
+pile_length_ready_2021_comb$time_to_pile <- as.numeric(pile_length_ready_2021_comb$time_to_pile)
+
+
+
+#split violin plot of observed vs randomized motif speed
+pile_violin_plot <- ggplot(pile_length_ready_2021_comb, aes(rule, time_to_pile, fill = data_type))  +
+  introdataviz::geom_split_violin(alpha= .9, trim = TRUE, show.legend = FALSE) +
+  geom_boxplot(width = .2, alpha = .2, fatten = 2, show.legend = FALSE, outlier.shape = NA) +
+  scale_x_discrete(name = "Time Dependent Rule") +  
+     coord_cartesian(ylim = c(0, 1000)) +
+  scale_y_continuous(name = "Speed of pileon events (s)",
+                     breaks = seq(0, 1000, 200) 
+                     ) + scale_fill_manual(values=c("red","gray")) +
+  theme_minimal(base_size = 20)  + theme(axis.text.y = element_text(size=25), axis.title= element_blank(), axis.text.x = element_blank())
+
+
+pile_2021_time_plot <- pile_violin_plot
+
+pile_2021_time_plot
+
+#calculate the means for observed and randomized motif speed
+mean_obs_rand_pileon_2021 <- pile_length_ready_2021_comb %>% group_by(data_type) %>%
+  dplyr::summarize (mean(time_to_pile))
+
+mean_obs_rand_pileon_2021
+
+
+
+
+
+
+median_obs_rand_pile_2021 <- pile_length_ready_2021_comb %>% group_by(data_type) %>%
+  dplyr::summarize (median(time_to_pile))
+
+median_obs_rand_pile_2021
+
+
+
+#linear mixed model to compare means of observed vs randomized motif speed
+m1pile <- glmer(time_to_pile ~ data_type  + (1 | date_period)   , data = pile_length_ready_2021_comb ,   control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun=2e5)), family = Gamma(link = "log"))
+summary(m1pile)
+
+m1pile2021 <- m1pile
+
+#calculate confidence intervals  
+confint_pile_2021 <- round(confint(m1pile2021, method = "Wald", level = 0.95), 3)
+confint_pile_2021
+
+
+#tukey
+summary(glht(m1pile2021, linfct = mcp(data_type="Tukey")), test = adjusted("none"))
+#find R2 value
+library(MuMIn)
+r.squaredGLMM(m1pile2021)
+
+```
+
+
+#Earth Movers Distance Calculation
+```{r}
+#ensure that observed motif speed is numeric
+pile_length_ready_2021$time_to_pile <- as.numeric(pile_length_ready_2021$time_to_pile)
+
+
+head(pile_length_ready_2021)
+
+#convert to a density matrix
+#summarize the count of various motif speeds
+
+summary.pile_length_ready_2021 <- pile_length_ready_2021 %>% group_by(time_to_pile) %>%
+  dplyr::summarize (
+    count =n())
+
+summary.pile_length_ready_2021
+#Add density column
+summary.pile_length_ready_2021_density <- mutate(summary.pile_length_ready_2021, density = count/sum(count))
+#remove count column
+summary.pile_length_ready_2021_density_no_count <- subset(summary.pile_length_ready_2021_density, select = -c(count))
+#reorder the columns
+summary.pile_length_ready_2021_density_no_count_reordered <- summary.pile_length_ready_2021_density_no_count[, c(2, 1)]
+head(summary.pile_length_ready_2021_density_no_count_reordered)
+#convert to matrix
+summary.pile_length_ready_2021_density_no_count_reordered_mat <- as.matrix(summary.pile_length_ready_2021_density_no_count_reordered)
+
+
+
+
+masterframe_length_ready <- subset(masterframe_pileon_time_sub.df_2021, select = c(time_to_pile))
+head(masterframe_length_ready)
+masterframe_length_ready$time_to_pile <- as.numeric(masterframe_length_ready$time_to_pile)
+
+#convert to a density matrix
+#summarize the count of various motif speeds
+
+summary.masterframe_length_ready <- masterframe_length_ready %>% group_by(time_to_pile) %>%
+  dplyr::summarize (
+    count =n())
+
+summary.masterframe_length_ready
+
+#Ad density column
+summary.masterframe_length_ready_density <- mutate(summary.masterframe_length_ready, density = count/sum(count))
+#remove count column
+summary.masterframe_length_ready_density_no_count <- subset(summary.masterframe_length_ready_density, select = -c(count))
+#reorder the columns
+summary.masterframe_length_ready_density_no_count_reordered <- summary.masterframe_length_ready_density_no_count[, c(2, 1)]
+head(summary.masterframe_length_ready_density_no_count_reordered)
+#convert to matrix
+summary.masterframe_length_ready_density_no_count_reordered_mat <- as.matrix(summary.masterframe_length_ready_density_no_count_reordered)
+
+
+#Calculate EMD between observed and randomized motif speed
+pile_obs_vs_rand_emd <- emdist::emd(summary.pile_length_ready_2021_density_no_count_reordered_mat, summary.masterframe_length_ready_density_no_count_reordered_mat)
+pile_obs_vs_rand_emd
+```
+
+
+#Calculate Observed Pileon (interval = 4 thresholds)
+```{r}
+
+ 
+#ensure df arranged by date and time
+datelist__pile <- lapply(datelist__pile, function(x) arrange(x, date, full_time))
+
+
+#put events sidebyside within date and within obs
+datelist__pile_2021 <- lapply(datelist__pile, function(x) mutate(x, actor_2 = lead(actor), subject_2 = lead(subject), 
+                                                                         full_time_2 = lead(full_time), actor_2_rank = lead(actor_rank), subject_2_rank = lead(subject_rank), date2 = lead(date)))
+
+
+# In this loop initiated marks whether the focal individual was the subject. rule_followed indicates that the behavioral and time constraint patterns associated with a certain rule's response motif were followed 
+pile_side_by_side_tested_2021 <- map(datelist__pile_2021, ~ mutate(.x, initiated = "yes", 
+                                      rule_followed = ifelse( subject == subject_2
+                                                              & actor != actor_2
+                                                              & full_time_2 - full_time <= 145  
+                                                              & full_time_2 - full_time > 0
+                                                              & date2 == date,
+                                                              "yes","no")))
+
+
+ #combine dataframes into one huge dataframe
+ pile_huge_2021 <- bind_rows(pile_side_by_side_tested_2021, .id = "column_label")
+ 
+ #sort by time and date
+ pile_huge_2021_sorted <- pile_huge_2021 %>%
+   arrange(pile_huge_2021$date, pile_huge_2021$full_time)
+ 
+#Remove duplicate events, events that have been represented twice, and events that could not confidently be counted as the start of pileon 
+ pile_huge_2021_sorted_no_dupr <- subset(pile_huge_2021_sorted, initiated != "no") 
+ 
+ #subset for desired columns
+ pile_no_dupr <- subset(pile_huge_2021_sorted_no_dupr, select = c(date, full_time, actor, actor_rank, subject, subject_rank, 
+                                                                         actor_2, actor_2_rank, subject_2, subject_2_rank, full_time_2, date2, 
+                                                                         initiated, rule_followed))
+ 
+ table(pile_no_dupr$rule_followed)
+ 
+ 
+ #determine how many times rule was followed
+ pile_real_2021 <- length(which(pile_no_dupr$rule_followed == "yes"))
+ pile_real.frame_2021 <- data.frame(pile_real_2021)
+
+ 
+ #create df of only rule follows
+ pile_doner_all_yes_2021 <-filter(pile_no_dupr, rule_followed == "yes")
+
+ 
+ 
+
+```
+
+
+
+
+#Randomize/permute order of events
+```{r}
+#################################################loop#################################################################
+head(aggression_no_repeat_custom)
+
+
+obs <- aggression_no_repeat_custom$date_period
+
+
+#separate data into a list with each df=a date 
+
+datelist__pile <- list()
+
+dater <- unique(obs)
+datex <- c(1: length(unique(obs)))
+
+
+#loop to create a separate dataframe for of each obs session each day 
+#Each dataframe is stored within a list to make the dataframes easier to work with
+#We conserve our permutation randomization within days and, more specifically, within observation sessions
+for(i in datex) { 
+  output <- filter(aggression_no_repeat_custom, aggression_no_repeat_custom$date_period == dater[i])
+  datelist__pile[[i]] <- output}
+
+
+
+
+
+#run ids should be 1 through however many times you want to run through the permutation
+runIDs <- seq(1,1000)
+
+#create an empty masterframe to be filled with each run of the permutation
+masterframe_pileon.df <- data.frame(runIDs = character(),
+                                         actor = character(),
+                                         subject = character(),
+                                         date = character(),
+                                         full_time = integer(),
+                                         actor_2 = character(),
+                                         subject_2 = character(),
+                                         full_time_2 = integer(),
+                                         date2 = character(),
+                                         initiated = character(),
+                                         rule_followed = character(),
+                                         stringsAsFactors=FALSE)
+
+
+nruns <- 1000
+#add progress bar
+pb <- txtProgressBar(min=0, max = nruns, style = 3)
+#seed = 38 for 145 sec
+#seed = 770 for 46 sec
+#seed = 56 for 1363
+#seed = 867 for 414
+#set seed
+set.seed(38)
+#forloop starts here'
+for (r in 1:length(runIDs)) { #r = 1 is a test you can uncomment to see if it works before #running it 100 times
+  #r = 1
+  run <- r
+  setTxtProgressBar(pb, r) #update progress bar
+
+  loop.run <- paste("run", run) 
+  loop.run
+    #for example, if r = 1, looprun will say run 1 which will allow you to keep each run's data straight
+  
+  
+
+  
+  #renamed data
+  loop.datalist <- datelist__pile
+  head(loop.datalist[[3]])
+  xorder <- c()
+  listlength <- as.numeric(length(loop.datalist))
+  datex2 <- 1:listlength
+  full_time_list <-c()
+  loop.data.randomized.time.added <- c()
+  #get rid of anything thats not actor and receiver (we will bind back on the date and time #later anyways to preserve
+  #their order)
+  
+
+
+   for(i in datex2) {
+     #store time
+     full_time_list[[i]] <- subset(loop.datalist[[i]], select = c(full_time))
+     #remove time from each df in the list. randomizing the order of time wouldnt make sense
+     loop.datalist[[i]] <- subset(loop.datalist[[i]], select = -c(full_time))
+
+      #create a randomized sequence of numbers to bind to the subset data (ex. 2,6,1,3,5,4)
+      #sort the data frame to put the randomized numbers in order from 1 to whatever and voila, the order of events has been randomized (ex.  from above 1,2,3,4,5,6)
+    xorder[[i]] <- data.frame(xorder = sample(1:length(loop.datalist[[i]]$actor),
+                                              length(loop.datalist[[i]]$actor)))
+    #bind random order to df
+    loop.datalist[[i]] <- mutate(loop.datalist[[i]], 
+                                 xorderx = xorder[[i]]$xorder)
+    #put randomized order of numbers in order to randomize rows in the dataset
+    loop.datalist[[i]] <-
+      loop.datalist[[i]][order(loop.datalist[[i]]$xorderx),]
+    #bind time back on
+    loop.data.randomized.time.added[[i]] <- bind_cols(loop.datalist[[i]], full_time_list[[i]])
+    loop.data.randomized.time.added[[i]] <- subset(loop.data.randomized.time.added[[i]], select = -c(xorderx))
+
+   }
+  
+  #order data by time and date
+  loop.data.randomized.time.added <- lapply(loop.data.randomized.time.added, function(x) arrange(x, date, full_time))
+
+  
+  #rename data
+  shuffled_day_obs_list <- loop.data.randomized.time.added
+  
+  
+  
+
+#put events sidebyside within date and within obs
+datelist__pile_2021_rand <- lapply(shuffled_day_obs_list, function(x) mutate(x, actor_2 = lead(actor), subject_2 = lead(subject), 
+                                                                         full_time_2 = lead(full_time), actor_2_rank = lead(actor_rank), subject_2_rank = lead(subject_rank), date2 = lead(date)))
+
+
+# In this loop initiated marks whether the focal individual was the subject. rule_followed indicates that the behavioral and time constraint patterns associated with a certain rule's response motif were followed
+pile_side_by_side_tested_2021_rand <- map(datelist__pile_2021_rand, ~ mutate(.x, initiated = "yes", 
+                                      rule_followed = ifelse( subject == subject_2
+                                                              & actor != actor_2
+                                                              & full_time_2 - full_time <= 145  
+                                                              & full_time_2 - full_time > 0
+                                                              & date2 == date,
+                                                              "yes","no")))
+
+
+
+
+  
+  
+  
+   #combine dataframes into one huge dataframe
+   pile_huge_2021 <- bind_rows(pile_side_by_side_tested_2021_rand, .id = "column_label")
+   
+   #sort by time and date
+   pile_huge_2021_sorted <- pile_huge_2021 %>%
+     arrange(pile_huge_2021$date, pile_huge_2021$full_time)
+   
+   
+   
+   
+   
+   #Remove duplicate events, events that have been represented twice, and events that could not confidently be counted as the start of pileon
+   pile_huge_2021_sorted_no_dupr <- subset(pile_huge_2021_sorted, initiated != "no") 
+  
+  
+  #subset for desired columns
+  pile_on_almost_complete <- subset(pile_huge_2021_sorted_no_dupr, select = c(actor, subject, date, full_time, 
+                                                                     actor_2, subject_2, full_time_2, date2, 
+                                                                     initiated, rule_followed))
+  
+  
+  #bind vector of run IDs for each run to the dataframe so that we have a numeric run id next to each data point that corresponds with that run which will allow us to sort in ascending order
+  runIDs <- rep(loop.run, length(pile_on_almost_complete$actor))
+  
+  pile_on_complete <- cbind(runIDs, pile_on_almost_complete)
+  
+  masterframe_pileon.df <- rbind(masterframe_pileon.df, pile_on_complete)
+}
+
+  
+#######################################################LOOP#END#######################################################
+
+#write.csv(masterframe_pileon.df,"pileon2021countmaster_rule_spec_95perc.csv", row.names = FALSE)
+
+
+```
+
+
+#Compare observed response motif execution to reference model
+```{r}
+#masterframe_pileon.df <- read_csv("pileon2021countmaster_rule_spec_95perc.csv")
+
+
+
+
+#put run #s in an ascending vector
+#create vector for number of time the response motif for the rule in question was executedto be stored
+cum_run_IDS <- unique(masterframe_pileon.df$runIDs)
+
+
+random_times_pile_on_followed <- c()
+
+
+#put the number of times the motif was executed into one vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_pileons <- length(which(masterframe_pileon.df$rule_followed == "yes" & 
+                                      masterframe_pileon.df$runIDs == j))
+  
+  random_times_pile_on_followed <- c(random_times_pile_on_followed, len_of_pileons)
+}
+
+
+rand_pile_.frame <- data.frame(random_times_pile_on_followed)
+
+#visualize observed motif execution vs reference distribution
+pile_2021_count_plot <- ggplot(rand_pile_.frame, aes(x=random_times_pile_on_followed)) + 
+  geom_histogram(aes(y=..density..),      
+                 binwidth=5,
+                 colour="black", fill="grey") + 
+  geom_vline(xintercept = pile_real_2021, colour = "red", size = 2)  +
+  geom_density(lwd = 1, linetype = 1) + theme_minimal() + theme(axis.text = element_text(size=25), axis.title= element_blank()) +
+  scale_x_continuous(name = "Count of Pile-on events", breaks=seq(0, 200, 50)) +  
+     coord_cartesian(xlim = c(0, 200), ylim = c(0,.04)) +
+scale_y_continuous(breaks = seq(0, .04, .01)) 
+
+pile_2021_count_plot
+   
+#calculate p value (proportion of randomized reference values that are more "extreme" than the observed count of rule follows)
+pile_tally2021 <-length(which(rand_pile_.frame$random_times_pile_on_followed < pile_real_2021))
+
+finalpile_tally2021 <- 1-  pile_tally2021/length(rand_pile_.frame$random_times_pile_on_followed)
+
+```
+
+
+#Individual motif execution
+```{r}
+#test for individual execution of the motif associated with the rule. How many times did each bird execute a particular motif
+unique(pile_doner_all_yes_2021$actor_2)
+length(unique(pile_doner_all_yes_2021$actor_2)
+)
+
+summary.pile.individ_2021 <- pile_doner_all_yes_2021 %>% group_by(actor_2) %>%
+  dplyr::summarize (
+    count =n())
+
+summary.pile.individ_2021
+
+
+
+
+#compare to raw dataset to see if any birds didnt execute the motif at all
+length(unique(t2021_aggression_only_ready$actor))
+length(unique(t2021_aggression_only_ready$subject))
+
+
+pile_nofollow <- setdiff(unique(c(t2021_aggression_only_ready$actor, t2021_aggression_only_ready$subject)), unique(pile_doner_all_yes_2021$actor_2)
+ )
+
+
+#add in 0s for individuals who did not execute the motif for plotting purposes
+pile_zeros <- rep(c(0),times=c(length(pile_nofollow)))
+
+pile_nofollow_zeros<- data.frame(pile_nofollow,pile_zeros) 
+
+colnames(pile_nofollow_zeros) <- c("actor_2","count")
+
+summary.pile.individ_2021 <- rbind(summary.pile.individ_2021, pile_nofollow_zeros)
+
+
+
+#Plot
+individ_pile_plot_2021 <- ggplot(summary.pile.individ_2021, aes(x = actor_2, y = count )) + 
+  geom_bar(stat = "identity", width = 0.6) + # Consistent bar width
+scale_y_continuous( breaks = seq(0, 60, 2)) + 
+  theme_minimal()  +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust=0.5),
+    axis.title.x = element_text( face = "bold",  margin = margin(t = 15)),  #X axis title
+    axis.title.y = element_text( face = "bold",  margin = margin(r = 15)),
+    ) +
+  labs(
+    x = "Parakeet ID",  #x axis title 
+    y = "Count of rule follows"   #y axis title 
+  )
+individ_pile_plot_2021
+```
