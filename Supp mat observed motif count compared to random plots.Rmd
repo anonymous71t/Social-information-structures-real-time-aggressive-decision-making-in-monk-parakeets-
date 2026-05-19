@@ -1,0 +1,1869 @@
+---
+title: "Supp mat observed motif count compared to random plots"
+author: 
+date: 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#load packages
+```{r}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(here)
+library(patchwork)
+
+```
+
+
+#rule spec 75%
+##Combine individual randomized and observed dfs respectively
+```{r}
+#IMPORTANT
+#Only run chunk if not using provided dfs (tdr_count_rand_comb_rule_spec_75_perc.csv and tdr_count_real_comb_rule_spec_75_perc.csv) and want to combine each randomized dataframe and each observed dataframe individually. If so be sure to run each rule's script up to "Calculate Observed Rule"
+
+
+
+
+
+#2021
+#retal
+masterframe_retaliation.df_2021 <- read_csv("retal2021countmaster_rule_spec_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_retaliation.df_2021$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_retaliation_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_retaliations <- length(which(masterframe_retaliation.df_2021$rule_followed == "yes" & 
+                                        masterframe_retaliation.df_2021$runIDs == j))
+random_times_retaliation_followed <- c(random_times_retaliation_followed, len_of_retaliations)
+}
+#turn vector into a dataframe for analysis
+rand_retal_.frame <- data.frame(random_times_retaliation_followed)
+
+
+#pile
+masterframe_pileon.df_2021 <- read_csv("pileon2021countmaster_rule_spec_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pileon.df_2021$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pileon_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_pileons <- length(which(masterframe_pileon.df_2021$rule_followed == "yes" & 
+                                        masterframe_pileon.df_2021$runIDs == j))
+random_times_pileon_followed <- c(random_times_pileon_followed, len_of_pileons)
+}
+#turn vector into a dataframe for analysis
+rand_pile_.frame <- data.frame(random_times_pileon_followed)
+
+
+#pass
+masterframe_passalong.df_2021 <- read_csv("passalong2021countmaster_rule_spec_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_passalong.df_2021$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_passalong_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_passalongs <- length(which(masterframe_passalong.df_2021$rule_followed == "yes" & 
+                                        masterframe_passalong.df_2021$runIDs == j))
+random_times_passalong_followed <- c(random_times_passalong_followed, len_of_passalongs)
+}
+#turn vector into a dataframe for analysis
+rand_pass_.frame <- data.frame(random_times_passalong_followed)
+
+
+
+
+#opp
+masterframe_opp.df_2021 <- read_csv("opp2021countmaster_rule_spec_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_opp.df_2021$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_opp_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_opps <- length(which(masterframe_opp.df_2021$rule_followed == "yes" & 
+                                        masterframe_opp.df_2021$runIDs == j))
+random_times_opp_followed <- c(random_times_opp_followed, len_of_opps)
+}
+#turn vector into a dataframe for analysis
+rand_opp_.frame <- data.frame(random_times_opp_followed)
+
+
+#pun
+masterframe_pun.df_2021 <- read_csv("punishment2021countmaster_rule_spec_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pun.df_2021$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pun_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_puns <- length(which(masterframe_pun.df_2021$rule_followed == "yes" & 
+                                        masterframe_pun.df_2021$runIDs == j))
+random_times_pun_followed <- c(random_times_pun_followed, len_of_puns)
+}
+#turn vector into a dataframe for analysis
+rand_pun_.frame <- data.frame(random_times_pun_followed)
+
+
+
+
+
+
+#2022G1
+masterframe_retaliation.df_2022G1 <- read_csv("retal2022G1countmaster_rule_spec_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_retaliation.df_2022G1$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_retaliation_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_retaliations <- length(which(masterframe_retaliation.df_2022G1$rule_followed == "yes" & 
+                                        masterframe_retaliation.df_2022G1$runIDs == j))
+random_times_retaliation_followed <- c(random_times_retaliation_followed, len_of_retaliations)
+}
+#turn vector into a dataframe for analysis
+rand_retal_.frame2022G1 <- data.frame(random_times_retaliation_followed)
+
+
+
+
+#pile
+masterframe_pileon.df_2022G1 <- read_csv("pileon2022G1countmaster_rule_spec_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pileon.df_2022G1$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pileon_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_pileons <- length(which(masterframe_pileon.df_2022G1$rule_followed == "yes" & 
+                                        masterframe_pileon.df_2022G1$runIDs == j))
+random_times_pileon_followed <- c(random_times_pileon_followed, len_of_pileons)
+}
+#turn vector into a dataframe for analysis
+rand_pile_.frame_2022G1 <- data.frame(random_times_pileon_followed)
+
+
+#pass
+masterframe_passalong.df_2022G1 <- read_csv("passalong2022G1countmaster_rule_spec_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_passalong.df_2022G1$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_passalong_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_passalongs <- length(which(masterframe_passalong.df_2022G1$rule_followed == "yes" & 
+                                        masterframe_passalong.df_2022G1$runIDs == j))
+random_times_passalong_followed <- c(random_times_passalong_followed, len_of_passalongs)
+}
+#turn vector into a dataframe for analysis
+rand_pass_.frame_2022G1 <- data.frame(random_times_passalong_followed)
+
+
+
+
+#opp
+masterframe_opp.df_2022G1 <- read_csv("opp2022G1countmaster_rule_spec_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_opp.df_2022G1$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_opp_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_opps <- length(which(masterframe_opp.df_2022G1$rule_followed == "yes" & 
+                                        masterframe_opp.df_2022G1$runIDs == j))
+random_times_opp_followed <- c(random_times_opp_followed, len_of_opps)
+}
+#turn vector into a dataframe for analysis
+rand_opp_.frame_2022G1 <- data.frame(random_times_opp_followed)
+
+
+#pun
+masterframe_pun.df_2022G1 <- read_csv("punishment2022G1countmaster_rule_spec_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pun.df_2022G1$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pun_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_puns <- length(which(masterframe_pun.df_2022G1$rule_followed == "yes" & 
+                                        masterframe_pun.df_2022G1$runIDs == j))
+random_times_pun_followed <- c(random_times_pun_followed, len_of_puns)
+}
+#turn vector into a dataframe for analysis
+rand_pun_.frame_2022G1 <- data.frame(random_times_pun_followed)
+
+
+
+
+
+
+
+
+
+#2022G2
+
+#2022G2
+masterframe_retaliation.df_2022G2 <- read_csv("retal2022G2countmaster_rule_spec_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_retaliation.df_2022G2$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_retaliation_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_retaliations <- length(which(masterframe_retaliation.df_2022G2$rule_followed == "yes" & 
+                                        masterframe_retaliation.df_2022G2$runIDs == j))
+random_times_retaliation_followed <- c(random_times_retaliation_followed, len_of_retaliations)
+}
+#turn vector into a dataframe for analysis
+rand_retal_.frame2022G2 <- data.frame(random_times_retaliation_followed)
+
+
+
+
+#pile
+masterframe_pileon.df_2022G2 <- read_csv("pileon2022G2countmaster_rule_spec_75_perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pileon.df_2022G2$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pileon_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_pileons <- length(which(masterframe_pileon.df_2022G2$rule_followed == "yes" & 
+                                        masterframe_pileon.df_2022G2$runIDs == j))
+random_times_pileon_followed <- c(random_times_pileon_followed, len_of_pileons)
+}
+#turn vector into a dataframe for analysis
+rand_pile_.frame_2022G2 <- data.frame(random_times_pileon_followed)
+
+
+#pass
+masterframe_passalong.df_2022G2 <- read_csv("passalong2022G2countmaster_rule_spec_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_passalong.df_2022G2$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_passalong_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_passalongs <- length(which(masterframe_passalong.df_2022G2$rule_followed == "yes" & 
+                                        masterframe_passalong.df_2022G2$runIDs == j))
+random_times_passalong_followed <- c(random_times_passalong_followed, len_of_passalongs)
+}
+#turn vector into a dataframe for analysis
+rand_pass_.frame_2022G2 <- data.frame(random_times_passalong_followed)
+
+
+
+
+#opp
+masterframe_opp.df_2022G2 <- read_csv("opp2022G2countmaster_rule_spec_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_opp.df_2022G2$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_opp_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_opps <- length(which(masterframe_opp.df_2022G2$rule_followed == "yes" & 
+                                        masterframe_opp.df_2022G2$runIDs == j))
+random_times_opp_followed <- c(random_times_opp_followed, len_of_opps)
+}
+#turn vector into a dataframe for analysis
+rand_opp_.frame_2022G2 <- data.frame(random_times_opp_followed)
+
+
+#pun
+masterframe_pun.df_2022G2 <- read_csv("punishment2022G2countmaster_rule_spec_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pun.df_2022G2$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pun_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_puns <- length(which(masterframe_pun.df_2022G2$rule_followed == "yes" & 
+                                        masterframe_pun.df_2022G2$runIDs == j))
+random_times_pun_followed <- c(random_times_pun_followed, len_of_puns)
+}
+#turn vector into a dataframe for analysis
+rand_pun_.frame_2022G2 <- data.frame(random_times_pun_followed)
+
+
+
+
+
+
+
+
+#make all column names consistent
+colnames(rand_retal_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_retal_.frame2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_retal_.frame2022G2)[1] <- 'count_of_rule_follows'
+colnames(rand_pile_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_pile_.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_pile_.frame_2022G2)[1] <- 'count_of_rule_follows'
+colnames(rand_pass_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_pass_.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_pass_.frame_2022G2)[1] <- 'count_of_rule_follows'
+colnames(rand_opp_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_opp_.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_opp_.frame_2022G2)[1] <- 'count_of_rule_follows'
+colnames(rand_pun_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_pun_.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_pun_.frame_2022G2)[1] <- 'count_of_rule_follows'
+
+
+
+
+#bind all dfs containing the counts of motif execution from the randomized reference models. bind possible grouping factors
+tdr_count_rand_comb <- rbind(
+  cbind(rand_retal_.frame, Group = "Retalialtion Group 1", groupid = "Group 1", rule = "Retaliation"),
+  cbind(rand_retal_.frame2022G1, Group = "Retaliation Group 2", groupid = "Group 2", rule = "Retaliation"),
+  cbind(rand_retal_.frame2022G2, Group = "Retaliation Group 3", groupid = "Group 3", rule = "Retaliation"),
+  cbind(rand_pile_.frame, Group = "Pile-on Group 1", groupid = "Group 1", rule = "Pile-on"),  
+  cbind(rand_pile_.frame_2022G1, Group = "Pile-on Group 2", groupid = "Group 2", rule = "Pile-on"),
+  cbind(rand_pile_.frame_2022G2, Group = "Pile-on Group 3", groupid = "Group 3", rule = "Pile-on"),
+  cbind(rand_pass_.frame, Group = "Pass-along Group 1", groupid = "Group 1", rule = "Pass-along"),
+  cbind(rand_pass_.frame_2022G1, Group = "Pass-along Group 2", groupid = "Group 2", rule = "Pass-along"),
+  cbind(rand_pass_.frame_2022G2, Group = "Pass-along Group 3", groupid = "Group 3", rule = "Pass-along"),
+  cbind(rand_opp_.frame, Group = "Opportunism Group 1", groupid = "Group 1", rule = "Opportunism"),
+  cbind(rand_opp_.frame_2022G1, Group = "Opportunism Group 2", groupid = "Group 2", rule = "Opportunism"),
+  cbind(rand_opp_.frame_2022G2, Group = "Opportunism Group 3", groupid = "Group 3", rule = "Opportunism"),
+  cbind(rand_pun_.frame, Group = "Punishment Group 1", groupid = "Group 1", rule = "Punishment"),
+  cbind(rand_pun_.frame_2022G1, Group = "Punishment Group 2", groupid = "Group 2", rule = "Punishment"),
+  cbind(rand_pun_.frame_2022G2, Group = "Punishment Group 3", groupid = "Group 3", rule = "Punishment")
+
+)
+
+
+
+
+#write.csv(tdr_count_rand_comb, "tdr_count_rand_comb_rule_spec_75_perc.csv", row.names = FALSE)
+
+
+
+
+
+#make all column names consistent
+colnames(retal_real.frame)[1] <- 'count_of_rule_follows'
+colnames(retal_real.frame2022G1)[1] <- 'count_of_rule_follows'
+colnames(retal_real.frame2022G2)[1] <- 'count_of_rule_follows'
+colnames(pile_real.frame_2021)[1] <- 'count_of_rule_follows'
+colnames(pile_real.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(pile_real.frame_2022G2)[1] <- 'count_of_rule_follows'
+colnames(pass_along_real_frame_2021)[1] <- 'count_of_rule_follows'
+colnames(pass_along_real_2022G1_frame)[1] <- 'count_of_rule_follows'
+colnames(pass_along_real_2022G2_frame)[1] <- 'count_of_rule_follows'
+colnames(opp_real_2021_frame)[1] <- 'count_of_rule_follows'
+colnames(opp_real_2022G1_frame)[1] <- 'count_of_rule_follows'
+colnames(opp_real_2022G2_frame)[1] <- 'count_of_rule_follows'
+colnames(punishment_real_2021_frame)[1] <- 'count_of_rule_follows'
+colnames(punishment_real_2022G1_frame)[1] <- 'count_of_rule_follows'
+colnames(punishment_real_2022G2_frame)[1] <- 'count_of_rule_follows'
+
+# #bind all dfs containing the counts of motif execution from observed data. bind possible grouping factors
+tdr_count_real_comb<- rbind(
+  cbind(retal_real.frame, Group = "Retalialtion Group 1", groupid = "Group 1", rule = "Retaliation"),
+  cbind(retal_real.frame2022G1, Group = "Retaliation Group 2", groupid = "Group 2", rule = "Retaliation"),
+  cbind(retal_real.frame2022G2, Group = "Retaliation Group 3", groupid = "Group 3", rule = "Retaliation"),
+  cbind(pile_real.frame_2021, Group = "Pile-on Group 1", groupid = "Group 1", rule = "Pile-on"),  
+  cbind(pile_real.frame_2022G1, Group = "Pile-on Group 2", groupid = "Group 2", rule = "Pile-on"),
+  cbind(pile_real.frame_2022G2, Group = "Pile-on Group 3", groupid = "Group 3", rule = "Pile-on"),
+  cbind(pass_along_real_frame_2021, Group = "Pass-along Group 1", groupid = "Group 1", rule = "Pass-along"),
+  cbind(pass_along_real_2022G1_frame, Group = "Pass-along Group 2", groupid = "Group 2", rule = "Pass-along"),
+  cbind(pass_along_real_2022G2_frame, Group = "Pass-along Group 3", groupid = "Group 3", rule = "Pass-along"),
+  cbind(opp_real_2021_frame, Group = "Opportunism Group 1", groupid = "Group 1", rule = "Opportunism"),
+  cbind(opp_real_2022G1_frame, Group = "Opportunism Group 2", groupid = "Group 2", rule = "Opportunism"),
+  cbind(opp_real_2022G2_frame, Group = "Opportunism Group 3", groupid = "Group 3", rule = "Opportunism"),
+  cbind(punishment_real_2021_frame, Group = "Punishment Group 1", groupid = "Group 1", rule = "Punishment"),
+  cbind(punishment_real_2022G1_frame, Group = "Punishment Group 2", groupid = "Group 2", rule = "Punishment"),
+  cbind(punishment_real_2022G2_frame, Group = "Punishment Group 3", groupid = "Group 3", rule = "Punishment")
+
+)
+
+#write.csv(tdr_count_real_comb,  "tdr_count_real_comb_rule_spec_75_perc.csv", row.names = FALSE)
+
+
+
+```
+
+##Plot observed motif count compared to random violin and barplots
+```{r}
+#Load randomized df
+tdr_count_rand_comb <- read_csv("tdr_count_rand_comb_rule_spec_75_perc.csv")
+
+
+#calculate means of randomized motif execution for each rule
+tdr_count_rand_comb_mean <- tdr_count_rand_comb  %>% group_by(groupid, rule) %>% summarise(mean_value = mean(count_of_rule_follows, na.rm = TRUE))
+
+
+#Load observed df
+tdr_count_real_comb <- read_csv("tdr_count_real_comb_rule_spec_75_perc.csv")
+
+
+
+#set order in which rules should be displayed in the plot
+custom_order <- c("Retaliation","Pile-on",  "Pass-along", "Opportunism", "Punishment")
+tdr_count_rand_comb$rule <- factor(tdr_count_rand_comb$rule, levels = custom_order)
+
+tdr_count_real_comb$rule <- factor(tdr_count_real_comb$rule, levels = custom_order)
+
+#compressed violin version
+
+rule_order <- c("Retaliation","Pile-on","Pass-along","Opportunism","Punishment")
+# Use only rules that actually exist in data just in case but keep the specified order
+present_rules <- intersect(rule_order, unique(tdr_count_rand_comb$rule))
+groups <- sort(unique(tdr_count_rand_comb$groupid))
+
+#Build axis order with rules clustered together and then g1 g2 g3 of each 
+#makes it so goes through groups first then rules
+#looks like Retaliation – G1,G2,G3 | Pile-on – G1,G2,G3 | ...
+axis_order <- expand.grid(
+  groupid = groups,
+  rule    = present_rules,
+  KEEP.OUT.ATTRS = FALSE
+) |>
+  mutate(xcat = paste0(rule, "–", groupid)) |>
+  pull(xcat)
+#make sure only pulling out appropriate rules and groups
+
+tdr_rand2 <- tdr_count_rand_comb |>
+  filter(rule %in% present_rules, groupid %in% groups) |>
+  mutate(
+    rule = factor(rule, levels = present_rules),
+    xcat = factor(paste0(rule, "–", groupid), levels = axis_order)
+  )
+#same thing for observed motif execution
+tdr_real2 <- tdr_count_real_comb |>
+  filter(rule %in% present_rules, groupid %in% groups) |>
+  mutate(
+    rule = factor(rule, levels = present_rules),
+    xcat = factor(paste0(rule, "–", groupid), levels = axis_order)
+  )
+
+#create separator positions between rule blocks
+g_per_rule    <- length(groups)
+sep_positions <- (seq_len(length(present_rules) - 1) * g_per_rule) + 0.5
+
+rule_violin <- ggplot(tdr_rand2, aes(x = xcat, y = count_of_rule_follows)) +
+#separators behind violins
+geom_vline(xintercept = sep_positions, linetype = "dashed",
+             color = "grey60", linewidth = 0.8) +
+#randomized reference as gray violins
+geom_violin(fill = "grey70", color = "black", alpha = 1,
+              width = 0.9, trim = FALSE, scale = "width") +
+#mean bar across each violin
+   stat_summary(fun = mean, geom = "crossbar", width = 0.6,
+              color = "black", linewidth = 0.3)+
+#observed value as a red horizontal line across each category
+  geom_segment(
+    data = tdr_real2,
+    aes(x = as.numeric(xcat) - 0.35,
+        xend = as.numeric(xcat) + 0.35,
+        y = count_of_rule_follows,
+        yend = count_of_rule_follows),
+    inherit.aes = FALSE,
+    linewidth = 1.2, color = "red"
+  ) +
+  labs(
+    x = NULL,
+    y = "Count of motif execution", 
+    title = "Observed vs. randomized reference by rule and group (violin)"
+  ) +
+  theme_minimal(base_size = 20) +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.8),
+    axis.text.x  = element_text(angle = 45, hjust = 1),
+    axis.ticks.x = element_line()
+  )
+
+rule_violin
+#15 by 12 
+
+
+
+
+
+
+
+#short bar plot to attach
+head(tdr_count_rand_comb_mean)
+head(tdr_count_real_comb)
+
+
+tdr_count_both_comb <- tdr_count_rand_comb_mean %>%
+  left_join(tdr_count_real_comb, by = c("groupid", "rule"))
+#obtain the difference between observed count and the mean of the reference distribution
+tdr_count_both_comb$dif <- tdr_count_both_comb$count_of_rule_follows - tdr_count_both_comb$mean_value
+
+
+
+rule_order <- c("Retaliation","Pile-on","Pass-along","Opportunism","Punishment")
+# Use only rules that actually exist in data just in case but keep the specified order
+present_rules <- intersect(rule_order, unique(tdr_count_both_comb$rule))
+groups <- sort(unique(tdr_count_both_comb$groupid))
+
+#Build axis order with rules clustered together and then g1 g2 g3 of each 
+#makes it so goes through groups first then rules
+#looks like Retaliation – G1,G2,G3 | Pile-on – G1,G2,G3 | ...
+axis_order <- expand.grid(
+  groupid = groups,
+  rule    = present_rules,
+  KEEP.OUT.ATTRS = FALSE
+) |>
+  mutate(xcat = paste0(rule, "–", groupid)) |>
+  pull(xcat)
+#make sure only pulling out appropriate rules and groups
+
+tdr_count_both_comb2 <- tdr_count_both_comb |>
+  filter(rule %in% present_rules, groupid %in% groups) |>
+  mutate(
+    rule = factor(rule, levels = present_rules),
+    xcat = factor(paste0(rule, "–", groupid), levels = axis_order)
+  )
+
+#create separator positions between rule blocks
+g_per_rule    <- length(groups)
+sep_positions <- (seq_len(length(present_rules) - 1) * g_per_rule) + 0.5
+
+
+
+rule_bar <- ggplot(tdr_count_both_comb2, aes(x = xcat, y = dif)) +
+  #separators behind bars
+  geom_vline(xintercept = sep_positions, linetype = "dashed",
+             color = "grey60", linewidth = 0.8) +
+  #bars from supplied y
+  geom_col(fill = "grey60", color = "black") +
+  labs(
+    x = NULL,
+    y = "Count of motif execution",
+    title = "Observed vs. randomized reference by rule and group (bar)"
+  ) +
+  theme_minimal(base_size = 20) +
+  scale_y_continuous(limits = c(-450, 100)) +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.8),
+    axis.text.x  = element_text(angle = 90, hjust = 1),
+    axis.ticks.x = element_line()
+  )
+
+rule_bar
+
+
+
+
+
+#keep the top plot as is visually, just hide its x label ticks so they don't repeat
+rule_violin_top <- rule_violin +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x  = element_blank(),
+    axis.ticks.x = element_blank(),
+    plot.margin  = margin(5.5, 5.5, 0, 5.5)  
+  )
+
+#keep bar plot exactly as is but tweak bottom margin
+rule_bar_bottom <- rule_bar +
+  theme(
+    plot.margin = margin(0, 5.5, 5.5, 5.5)
+  )
+
+#stack two plots together. The violins on top (bigger), bars below (smaller)
+combined <- rule_violin_top / rule_bar_bottom +
+  plot_layout(heights = c(2, 1), guides = "keep")
+
+combined
+#12 by 10
+
+#P values added manually in inkscape for easier formatting
+
+```
+
+
+
+
+
+
+
+
+
+
+#global 95%
+##Combine individual randomized and observed dfs respectively
+```{r}
+
+#IMPORTANT
+#Only run chunk if not using provided dfs (tdr_count_rand_comb_global_95_perc.csv and tdr_count_real_comb_global_95_perc.csv) and want to combine each randomized dataframe and each observed dataframe individually. If so be sure to run each rule's script up to "Calculate Observed Rule"
+
+
+#2021
+#retal
+masterframe_retaliation.df_2021 <- read_csv("retal2021countmaster_global_95perc.csv")
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_retaliation.df_2021$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_retaliation_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_retaliations <- length(which(masterframe_retaliation.df_2021$rule_followed == "yes" & 
+                                        masterframe_retaliation.df_2021$runIDs == j))
+random_times_retaliation_followed <- c(random_times_retaliation_followed, len_of_retaliations)
+}
+#turn vector into a dataframe for analysis
+rand_retal_.frame <- data.frame(random_times_retaliation_followed)
+
+
+#pile
+masterframe_pileon.df_2021 <- read_csv("pileon2021countmaster_global_95perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pileon.df_2021$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pileon_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_pileons <- length(which(masterframe_pileon.df_2021$rule_followed == "yes" & 
+                                        masterframe_pileon.df_2021$runIDs == j))
+random_times_pileon_followed <- c(random_times_pileon_followed, len_of_pileons)
+}
+#turn vector into a dataframe for analysis
+rand_pile_.frame <- data.frame(random_times_pileon_followed)
+
+
+#pass
+masterframe_passalong.df_2021 <- read_csv("passalong2021countmaster_global_95perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_passalong.df_2021$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_passalong_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_passalongs <- length(which(masterframe_passalong.df_2021$rule_followed == "yes" & 
+                                        masterframe_passalong.df_2021$runIDs == j))
+random_times_passalong_followed <- c(random_times_passalong_followed, len_of_passalongs)
+}
+#turn vector into a dataframe for analysis
+rand_pass_.frame <- data.frame(random_times_passalong_followed)
+
+
+
+
+#opp
+masterframe_opp.df_2021 <- read_csv("opp2021countmaster_global_95perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_opp.df_2021$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_opp_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_opps <- length(which(masterframe_opp.df_2021$rule_followed == "yes" & 
+                                        masterframe_opp.df_2021$runIDs == j))
+random_times_opp_followed <- c(random_times_opp_followed, len_of_opps)
+}
+#turn vector into a dataframe for analysis
+rand_opp_.frame <- data.frame(random_times_opp_followed)
+
+
+#pun
+masterframe_pun.df_2021 <- read_csv("punishment2021countmaster_global_95perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pun.df_2021$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pun_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_puns <- length(which(masterframe_pun.df_2021$rule_followed == "yes" & 
+                                        masterframe_pun.df_2021$runIDs == j))
+random_times_pun_followed <- c(random_times_pun_followed, len_of_puns)
+}
+#turn vector into a dataframe for analysis
+rand_pun_.frame <- data.frame(random_times_pun_followed)
+
+
+
+
+
+
+#2022G1
+masterframe_retaliation.df_2022G1 <- read_csv("retal2022G1countmaster_global_95perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_retaliation.df_2022G1$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_retaliation_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_retaliations <- length(which(masterframe_retaliation.df_2022G1$rule_followed == "yes" & 
+                                        masterframe_retaliation.df_2022G1$runIDs == j))
+random_times_retaliation_followed <- c(random_times_retaliation_followed, len_of_retaliations)
+}
+#turn vector into a dataframe for analysis
+rand_retal_.frame2022G1 <- data.frame(random_times_retaliation_followed)
+
+
+
+
+#pile
+masterframe_pileon.df_2022G1 <- read_csv("pileon2022G1countmaster_global_95perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pileon.df_2022G1$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pileon_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_pileons <- length(which(masterframe_pileon.df_2022G1$rule_followed == "yes" & 
+                                        masterframe_pileon.df_2022G1$runIDs == j))
+random_times_pileon_followed <- c(random_times_pileon_followed, len_of_pileons)
+}
+#turn vector into a dataframe for analysis
+rand_pile_.frame_2022G1 <- data.frame(random_times_pileon_followed)
+
+
+#pass
+masterframe_passalong.df_2022G1 <- read_csv("passalong2022G1countmaster_global_95perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_passalong.df_2022G1$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_passalong_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_passalongs <- length(which(masterframe_passalong.df_2022G1$rule_followed == "yes" & 
+                                        masterframe_passalong.df_2022G1$runIDs == j))
+random_times_passalong_followed <- c(random_times_passalong_followed, len_of_passalongs)
+}
+#turn vector into a dataframe for analysis
+rand_pass_.frame_2022G1 <- data.frame(random_times_passalong_followed)
+
+
+
+
+#opp
+masterframe_opp.df_2022G1 <- read_csv("opp2022G1countmaster_global_95perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_opp.df_2022G1$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_opp_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_opps <- length(which(masterframe_opp.df_2022G1$rule_followed == "yes" & 
+                                        masterframe_opp.df_2022G1$runIDs == j))
+random_times_opp_followed <- c(random_times_opp_followed, len_of_opps)
+}
+#turn vector into a dataframe for analysis
+rand_opp_.frame_2022G1 <- data.frame(random_times_opp_followed)
+
+
+#pun
+masterframe_pun.df_2022G1 <- read_csv("punishment2022G1countmaster_global_95perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pun.df_2022G1$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pun_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_puns <- length(which(masterframe_pun.df_2022G1$rule_followed == "yes" & 
+                                        masterframe_pun.df_2022G1$runIDs == j))
+random_times_pun_followed <- c(random_times_pun_followed, len_of_puns)
+}
+#turn vector into a dataframe for analysis
+rand_pun_.frame_2022G1 <- data.frame(random_times_pun_followed)
+
+
+
+
+
+
+
+
+
+#2022G2
+
+#2022G2
+masterframe_retaliation.df_2022G2 <- read_csv("retal2022G2countmaster_global_95perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_retaliation.df_2022G2$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_retaliation_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_retaliations <- length(which(masterframe_retaliation.df_2022G2$rule_followed == "yes" & 
+                                        masterframe_retaliation.df_2022G2$runIDs == j))
+random_times_retaliation_followed <- c(random_times_retaliation_followed, len_of_retaliations)
+}
+#turn vector into a dataframe for analysis
+rand_retal_.frame2022G2 <- data.frame(random_times_retaliation_followed)
+
+
+
+
+#pile
+masterframe_pileon.df_2022G2 <- read_csv("pileon2022G2countmaster_global_95perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pileon.df_2022G2$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pileon_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_pileons <- length(which(masterframe_pileon.df_2022G2$rule_followed == "yes" & 
+                                        masterframe_pileon.df_2022G2$runIDs == j))
+random_times_pileon_followed <- c(random_times_pileon_followed, len_of_pileons)
+}
+#turn vector into a dataframe for analysis
+rand_pile_.frame_2022G2 <- data.frame(random_times_pileon_followed)
+
+
+#pass
+masterframe_passalong.df_2022G2 <- read_csv("passalong2022G2countmaster_global_95perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_passalong.df_2022G2$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_passalong_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_passalongs <- length(which(masterframe_passalong.df_2022G2$rule_followed == "yes" & 
+                                        masterframe_passalong.df_2022G2$runIDs == j))
+random_times_passalong_followed <- c(random_times_passalong_followed, len_of_passalongs)
+}
+#turn vector into a dataframe for analysis
+rand_pass_.frame_2022G2 <- data.frame(random_times_passalong_followed)
+
+
+
+
+#opp
+masterframe_opp.df_2022G2 <- read_csv("opp2022G2countmaster_global_95perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_opp.df_2022G2$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_opp_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_opps <- length(which(masterframe_opp.df_2022G2$rule_followed == "yes" & 
+                                        masterframe_opp.df_2022G2$runIDs == j))
+random_times_opp_followed <- c(random_times_opp_followed, len_of_opps)
+}
+#turn vector into a dataframe for analysis
+rand_opp_.frame_2022G2 <- data.frame(random_times_opp_followed)
+
+
+#pun
+masterframe_pun.df_2022G2 <- read_csv("punishment2022G2countmaster_global_95perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pun.df_2022G2$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pun_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_puns <- length(which(masterframe_pun.df_2022G2$rule_followed == "yes" & 
+                                        masterframe_pun.df_2022G2$runIDs == j))
+random_times_pun_followed <- c(random_times_pun_followed, len_of_puns)
+}
+#turn vector into a dataframe for analysis
+rand_pun_.frame_2022G2 <- data.frame(random_times_pun_followed)
+
+
+
+
+
+
+
+
+#make all column names consistent
+colnames(rand_retal_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_retal_.frame2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_retal_.frame2022G2)[1] <- 'count_of_rule_follows'
+colnames(rand_pile_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_pile_.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_pile_.frame_2022G2)[1] <- 'count_of_rule_follows'
+colnames(rand_pass_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_pass_.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_pass_.frame_2022G2)[1] <- 'count_of_rule_follows'
+colnames(rand_opp_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_opp_.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_opp_.frame_2022G2)[1] <- 'count_of_rule_follows'
+colnames(rand_pun_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_pun_.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_pun_.frame_2022G2)[1] <- 'count_of_rule_follows'
+
+
+
+
+
+
+#bind all dfs containing the counts of motif execution from the randomized reference models. bind possible grouping factors
+tdr_count_rand_comb <- rbind(
+  cbind(rand_retal_.frame, Group = "Retalialtion Group 1", groupid = "Group 1", rule = "Retaliation"),
+  cbind(rand_retal_.frame2022G1, Group = "Retaliation Group 2", groupid = "Group 2", rule = "Retaliation"),
+  cbind(rand_retal_.frame2022G2, Group = "Retaliation Group 3", groupid = "Group 3", rule = "Retaliation"),
+  cbind(rand_pile_.frame, Group = "Pile-on Group 1", groupid = "Group 1", rule = "Pile-on"),  
+  cbind(rand_pile_.frame_2022G1, Group = "Pile-on Group 2", groupid = "Group 2", rule = "Pile-on"),
+  cbind(rand_pile_.frame_2022G2, Group = "Pile-on Group 3", groupid = "Group 3", rule = "Pile-on"),
+  cbind(rand_pass_.frame, Group = "Pass-along Group 1", groupid = "Group 1", rule = "Pass-along"),
+  cbind(rand_pass_.frame_2022G1, Group = "Pass-along Group 2", groupid = "Group 2", rule = "Pass-along"),
+  cbind(rand_pass_.frame_2022G2, Group = "Pass-along Group 3", groupid = "Group 3", rule = "Pass-along"),
+  cbind(rand_opp_.frame, Group = "Opportunism Group 1", groupid = "Group 1", rule = "Opportunism"),
+  cbind(rand_opp_.frame_2022G1, Group = "Opportunism Group 2", groupid = "Group 2", rule = "Opportunism"),
+  cbind(rand_opp_.frame_2022G2, Group = "Opportunism Group 3", groupid = "Group 3", rule = "Opportunism"),
+  cbind(rand_pun_.frame, Group = "Punishment Group 1", groupid = "Group 1", rule = "Punishment"),
+  cbind(rand_pun_.frame_2022G1, Group = "Punishment Group 2", groupid = "Group 2", rule = "Punishment"),
+  cbind(rand_pun_.frame_2022G2, Group = "Punishment Group 3", groupid = "Group 3", rule = "Punishment")
+
+)
+
+#write.csv(tdr_count_rand_comb,  "tdr_count_rand_comb_global_95_perc.csv", row.names = FALSE)
+
+
+
+
+#make all column names consistent
+colnames(retal_real.frame)[1] <- 'count_of_rule_follows'
+colnames(retal_real.frame2022G1)[1] <- 'count_of_rule_follows'
+colnames(retal_real.frame2022G2)[1] <- 'count_of_rule_follows'
+colnames(pile_real.frame_2021)[1] <- 'count_of_rule_follows'
+colnames(pile_real.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(pile_real.frame_2022G2)[1] <- 'count_of_rule_follows'
+colnames(pass_along_real_frame_2021)[1] <- 'count_of_rule_follows'
+colnames(pass_along_real_2022G1_frame)[1] <- 'count_of_rule_follows'
+colnames(pass_along_real_2022G2_frame)[1] <- 'count_of_rule_follows'
+colnames(opp_real_2021_frame)[1] <- 'count_of_rule_follows'
+colnames(opp_real_2022G1_frame)[1] <- 'count_of_rule_follows'
+colnames(opp_real_2022G2_frame)[1] <- 'count_of_rule_follows'
+colnames(punishment_real_2021_frame)[1] <- 'count_of_rule_follows'
+colnames(punishment_real_2022G1_frame)[1] <- 'count_of_rule_follows'
+colnames(punishment_real_2022G2_frame)[1] <- 'count_of_rule_follows'
+
+# #bind all dfs containing the counts of motif execution from observed data. bind possible grouping factors
+tdr_count_real_comb<- rbind(
+  cbind(retal_real.frame, Group = "Retalialtion Group 1", groupid = "Group 1", rule = "Retaliation"),
+  cbind(retal_real.frame2022G1, Group = "Retaliation Group 2", groupid = "Group 2", rule = "Retaliation"),
+  cbind(retal_real.frame2022G2, Group = "Retaliation Group 3", groupid = "Group 3", rule = "Retaliation"),
+  cbind(pile_real.frame_2021, Group = "Pile-on Group 1", groupid = "Group 1", rule = "Pile-on"),  
+  cbind(pile_real.frame_2022G1, Group = "Pile-on Group 2", groupid = "Group 2", rule = "Pile-on"),
+  cbind(pile_real.frame_2022G2, Group = "Pile-on Group 3", groupid = "Group 3", rule = "Pile-on"),
+  cbind(pass_along_real_frame_2021, Group = "Pass-along Group 1", groupid = "Group 1", rule = "Pass-along"),
+  cbind(pass_along_real_2022G1_frame, Group = "Pass-along Group 2", groupid = "Group 2", rule = "Pass-along"),
+  cbind(pass_along_real_2022G2_frame, Group = "Pass-along Group 3", groupid = "Group 3", rule = "Pass-along"),
+  cbind(opp_real_2021_frame, Group = "Opportunism Group 1", groupid = "Group 1", rule = "Opportunism"),
+  cbind(opp_real_2022G1_frame, Group = "Opportunism Group 2", groupid = "Group 2", rule = "Opportunism"),
+  cbind(opp_real_2022G2_frame, Group = "Opportunism Group 3", groupid = "Group 3", rule = "Opportunism"),
+  cbind(punishment_real_2021_frame, Group = "Punishment Group 1", groupid = "Group 1", rule = "Punishment"),
+  cbind(punishment_real_2022G1_frame, Group = "Punishment Group 2", groupid = "Group 2", rule = "Punishment"),
+  cbind(punishment_real_2022G2_frame, Group = "Punishment Group 3", groupid = "Group 3", rule = "Punishment")
+
+)
+
+#write.csv(tdr_count_real_comb,  "tdr_count_real_comb_global_95_perc.csv", row.names = FALSE)
+
+
+
+
+```
+
+##Plot observed motif count compared to random violin and barplots
+```{r}
+
+#Load randomized df
+tdr_count_rand_comb <- read_csv("tdr_count_rand_comb_global_95_perc.csv")
+
+
+#calculate means of randomized motif execution for each rule
+tdr_count_rand_comb_mean <- tdr_count_rand_comb  %>% group_by(groupid, rule) %>% summarise(mean_value = mean(count_of_rule_follows, na.rm = TRUE))
+
+
+
+
+#Load observed df
+tdr_count_real_comb <- read_csv("tdr_count_real_comb_global_95_perc.csv")
+
+
+
+#set order in which rules should be displayed in the plot
+custom_order <- c("Retaliation","Pile-on",  "Pass-along", "Opportunism", "Punishment")
+tdr_count_rand_comb$rule <- factor(tdr_count_rand_comb$rule, levels = custom_order)
+
+tdr_count_real_comb$rule <- factor(tdr_count_real_comb$rule, levels = custom_order)
+
+#compressed violin version
+
+rule_order <- c("Retaliation","Pile-on","Pass-along","Opportunism","Punishment")
+# Use only rules that actually exist in data just in case but keep the specified order
+present_rules <- intersect(rule_order, unique(tdr_count_rand_comb$rule))
+groups <- sort(unique(tdr_count_rand_comb$groupid))
+
+#Build axis order with rules clustered together and then g1 g2 g3 of each 
+#makes it so goes through groups first then rules
+#looks like Retaliation – G1,G2,G3 | Pile-on – G1,G2,G3 | ...
+axis_order <- expand.grid(
+  groupid = groups,
+  rule    = present_rules,
+  KEEP.OUT.ATTRS = FALSE
+) |>
+  mutate(xcat = paste0(rule, "–", groupid)) |>
+  pull(xcat)
+#make sure only pulling out appropriate rules and groups
+
+tdr_rand2 <- tdr_count_rand_comb |>
+  filter(rule %in% present_rules, groupid %in% groups) |>
+  mutate(
+    rule = factor(rule, levels = present_rules),
+    xcat = factor(paste0(rule, "–", groupid), levels = axis_order)
+  )
+#same thing for observed motif execution
+tdr_real2 <- tdr_count_real_comb |>
+  filter(rule %in% present_rules, groupid %in% groups) |>
+  mutate(
+    rule = factor(rule, levels = present_rules),
+    xcat = factor(paste0(rule, "–", groupid), levels = axis_order)
+  )
+
+#create separator positions between rule blocks
+g_per_rule    <- length(groups)
+sep_positions <- (seq_len(length(present_rules) - 1) * g_per_rule) + 0.5
+
+rule_violin <- ggplot(tdr_rand2, aes(x = xcat, y = count_of_rule_follows)) +
+#separators behind violins
+geom_vline(xintercept = sep_positions, linetype = "dashed",
+             color = "grey60", linewidth = 0.8) +
+#randomized reference as gray violins
+geom_violin(fill = "grey70", color = "black", alpha = 1,
+              width = 0.9, trim = FALSE, scale = "width") +
+#mean bar across each violin
+   stat_summary(fun = mean, geom = "crossbar", width = 0.6,
+              color = "black", linewidth = 0.3)+
+#observed value as a red horizontal line across each category
+  geom_segment(
+    data = tdr_real2,
+    aes(x = as.numeric(xcat) - 0.35,
+        xend = as.numeric(xcat) + 0.35,
+        y = count_of_rule_follows,
+        yend = count_of_rule_follows),
+    inherit.aes = FALSE,
+    linewidth = 1.2, color = "red"
+  ) +
+  labs(
+    x = NULL,
+    y = "Count of motif execution", 
+    title = "Observed vs. randomized reference by rule and group (violin)"
+  ) +
+  theme_minimal(base_size = 20) +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.8),
+    axis.text.x  = element_text(angle = 45, hjust = 1),
+    axis.ticks.x = element_line()
+  )
+
+rule_violin
+#15 by 12 or 12 by 15
+
+
+
+
+
+
+
+
+
+#short bar plot to attach
+head(tdr_count_rand_comb_mean)
+head(tdr_count_real_comb)
+
+
+tdr_count_both_comb <- tdr_count_rand_comb_mean %>%
+  left_join(tdr_count_real_comb, by = c("groupid", "rule"))
+#obtain the difference between observed count and the mean of the reference distribution
+tdr_count_both_comb$dif <- tdr_count_both_comb$count_of_rule_follows - tdr_count_both_comb$mean_value
+
+
+
+rule_order <- c("Retaliation","Pile-on","Pass-along","Opportunism","Punishment")
+# Use only rules that actually exist in data just in case but keep the specified order
+present_rules <- intersect(rule_order, unique(tdr_count_both_comb$rule))
+groups <- sort(unique(tdr_count_both_comb$groupid))
+
+#Build axis order with rules clustered together and then g1 g2 g3 of each 
+#makes it so goes through groups first then rules
+#looks like Retaliation – G1,G2,G3 | Pile-on – G1,G2,G3 | ...
+axis_order <- expand.grid(
+  groupid = groups,
+  rule    = present_rules,
+  KEEP.OUT.ATTRS = FALSE
+) |>
+  mutate(xcat = paste0(rule, "–", groupid)) |>
+  pull(xcat)
+#make sure only pulling out appropriate rules and groups
+
+tdr_count_both_comb2 <- tdr_count_both_comb |>
+  filter(rule %in% present_rules, groupid %in% groups) |>
+  mutate(
+    rule = factor(rule, levels = present_rules),
+    xcat = factor(paste0(rule, "–", groupid), levels = axis_order)
+  )
+
+#create separator positions between rule blocks
+g_per_rule    <- length(groups)
+sep_positions <- (seq_len(length(present_rules) - 1) * g_per_rule) + 0.5
+
+
+
+rule_bar <- ggplot(tdr_count_both_comb2, aes(x = xcat, y = dif)) +
+  #separators behind bars
+  geom_vline(xintercept = sep_positions, linetype = "dashed",
+             color = "grey60", linewidth = 0.8) +
+  #bars from supplied y
+  geom_col(fill = "grey60", color = "black") +
+  labs(
+    x = NULL,
+    y = "Count of motif execution",
+    title = "Observed vs. randomized reference by rule and group (bar)"
+  ) +
+  theme_minimal(base_size = 20) +
+  scale_y_continuous(limits = c(-450, 100)) +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.8),
+    axis.text.x  = element_text(angle = 90, hjust = 1),
+    axis.ticks.x = element_line()
+  )
+
+rule_bar
+
+
+
+
+
+#keep the top plot as is visually, just hide its x label ticks so they don't repeat
+rule_violin_top <- rule_violin +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x  = element_blank(),
+    axis.ticks.x = element_blank(),
+    plot.margin  = margin(5.5, 5.5, 0, 5.5)  
+  )
+
+#keep bar plot exactly as is but tweak bottom margin
+rule_bar_bottom <- rule_bar +
+  theme(
+    plot.margin = margin(0, 5.5, 5.5, 5.5)
+  )
+
+#stack two plots together. The violins on top (bigger), bars below (smaller)
+combined <- rule_violin_top / rule_bar_bottom +
+  plot_layout(heights = c(2, 1), guides = "keep")
+
+combined
+#12 by 10
+
+#P values added manually in inkscape for easier formatting
+
+```
+
+
+#global 75%
+##Combine individual randomized and observed dfs respectively
+```{r}
+
+#IMPORTANT
+#Only run chunk if not using provided dfs (tdr_count_rand_comb_global_75_perc.csv and tdr_count_real_comb_global_75_perc.csv) and want to combine each randomized dataframe and each observed dataframe individually. If so be sure to run each rule's script up to "Calculate Observed Rule"
+
+
+
+
+#2021
+#retal
+masterframe_retaliation.df_2021 <- read_csv("retal2021countmaster_global_75perc.csv")
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_retaliation.df_2021$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_retaliation_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_retaliations <- length(which(masterframe_retaliation.df_2021$rule_followed == "yes" & 
+                                        masterframe_retaliation.df_2021$runIDs == j))
+random_times_retaliation_followed <- c(random_times_retaliation_followed, len_of_retaliations)
+}
+#turn vector into a dataframe for analysis
+rand_retal_.frame <- data.frame(random_times_retaliation_followed)
+
+
+
+
+#pile
+masterframe_pileon.df_2021 <- read_csv("pileon2021countmaster_global_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pileon.df_2021$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pileon_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_pileons <- length(which(masterframe_pileon.df_2021$rule_followed == "yes" & 
+                                        masterframe_pileon.df_2021$runIDs == j))
+random_times_pileon_followed <- c(random_times_pileon_followed, len_of_pileons)
+}
+#turn vector into a dataframe for analysis
+rand_pile_.frame <- data.frame(random_times_pileon_followed)
+
+
+#pass
+masterframe_passalong.df_2021 <- read_csv("passalong2021countmaster_global_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_passalong.df_2021$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_passalong_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_passalongs <- length(which(masterframe_passalong.df_2021$rule_followed == "yes" & 
+                                        masterframe_passalong.df_2021$runIDs == j))
+random_times_passalong_followed <- c(random_times_passalong_followed, len_of_passalongs)
+}
+#turn vector into a dataframe for analysis
+rand_pass_.frame <- data.frame(random_times_passalong_followed)
+
+
+
+
+#opp
+masterframe_opp.df_2021 <- read_csv("opp2021countmaster_global_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_opp.df_2021$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_opp_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_opps <- length(which(masterframe_opp.df_2021$rule_followed == "yes" & 
+                                        masterframe_opp.df_2021$runIDs == j))
+random_times_opp_followed <- c(random_times_opp_followed, len_of_opps)
+}
+#turn vector into a dataframe for analysis
+rand_opp_.frame <- data.frame(random_times_opp_followed)
+
+
+#pun
+masterframe_pun.df_2021 <- read_csv("punishment2021countmaster_global_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pun.df_2021$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pun_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_puns <- length(which(masterframe_pun.df_2021$rule_followed == "yes" & 
+                                        masterframe_pun.df_2021$runIDs == j))
+random_times_pun_followed <- c(random_times_pun_followed, len_of_puns)
+}
+#turn vector into a dataframe for analysis
+rand_pun_.frame <- data.frame(random_times_pun_followed)
+
+
+
+
+
+
+#2022G1
+masterframe_retaliation.df_2022G1 <- read_csv("retal2022G1countmaster_global_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_retaliation.df_2022G1$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_retaliation_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_retaliations <- length(which(masterframe_retaliation.df_2022G1$rule_followed == "yes" & 
+                                        masterframe_retaliation.df_2022G1$runIDs == j))
+random_times_retaliation_followed <- c(random_times_retaliation_followed, len_of_retaliations)
+}
+#turn vector into a dataframe for analysis
+rand_retal_.frame2022G1 <- data.frame(random_times_retaliation_followed)
+
+
+
+
+#pile
+masterframe_pileon.df_2022G1 <- read_csv("pileon2022G1countmaster_global_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pileon.df_2022G1$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pileon_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_pileons <- length(which(masterframe_pileon.df_2022G1$rule_followed == "yes" & 
+                                        masterframe_pileon.df_2022G1$runIDs == j))
+random_times_pileon_followed <- c(random_times_pileon_followed, len_of_pileons)
+}
+#turn vector into a dataframe for analysis
+rand_pile_.frame_2022G1 <- data.frame(random_times_pileon_followed)
+
+
+#pass
+masterframe_passalong.df_2022G1 <- read_csv("passalong2022G1countmaster_global_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_passalong.df_2022G1$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_passalong_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_passalongs <- length(which(masterframe_passalong.df_2022G1$rule_followed == "yes" & 
+                                        masterframe_passalong.df_2022G1$runIDs == j))
+random_times_passalong_followed <- c(random_times_passalong_followed, len_of_passalongs)
+}
+#turn vector into a dataframe for analysis
+rand_pass_.frame_2022G1 <- data.frame(random_times_passalong_followed)
+
+
+
+#opp
+masterframe_opp.df_2022G1 <- read_csv("opp2022G1countmaster_global_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_opp.df_2022G1$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_opp_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_opps <- length(which(masterframe_opp.df_2022G1$rule_followed == "yes" & 
+                                        masterframe_opp.df_2022G1$runIDs == j))
+random_times_opp_followed <- c(random_times_opp_followed, len_of_opps)
+}
+#turn vector into a dataframe for analysis
+rand_opp_.frame_2022G1 <- data.frame(random_times_opp_followed)
+
+
+#pun
+masterframe_pun.df_2022G1 <- read_csv("punishment2022G1countmaster_global_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pun.df_2022G1$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pun_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_puns <- length(which(masterframe_pun.df_2022G1$rule_followed == "yes" & 
+                                        masterframe_pun.df_2022G1$runIDs == j))
+random_times_pun_followed <- c(random_times_pun_followed, len_of_puns)
+}
+#turn vector into a dataframe for analysis
+rand_pun_.frame_2022G1 <- data.frame(random_times_pun_followed)
+
+
+
+
+
+
+
+
+
+#2022G2
+
+#2022G2
+masterframe_retaliation.df_2022G2 <- read_csv("retal2022G2countmaster_global_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_retaliation.df_2022G2$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_retaliation_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_retaliations <- length(which(masterframe_retaliation.df_2022G2$rule_followed == "yes" & 
+                                        masterframe_retaliation.df_2022G2$runIDs == j))
+random_times_retaliation_followed <- c(random_times_retaliation_followed, len_of_retaliations)
+}
+#turn vector into a dataframe for analysis
+rand_retal_.frame2022G2 <- data.frame(random_times_retaliation_followed)
+
+
+
+
+#pile
+masterframe_pileon.df_2022G2 <- read_csv("pileon2022G2countmaster_global_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pileon.df_2022G2$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pileon_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_pileons <- length(which(masterframe_pileon.df_2022G2$rule_followed == "yes" & 
+                                        masterframe_pileon.df_2022G2$runIDs == j))
+random_times_pileon_followed <- c(random_times_pileon_followed, len_of_pileons)
+}
+#turn vector into a dataframe for analysis
+rand_pile_.frame_2022G2 <- data.frame(random_times_pileon_followed)
+
+
+#pass
+masterframe_passalong.df_2022G2 <- read_csv("passalong2022G2countmaster_global_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_passalong.df_2022G2$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_passalong_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_passalongs <- length(which(masterframe_passalong.df_2022G2$rule_followed == "yes" & 
+                                        masterframe_passalong.df_2022G2$runIDs == j))
+random_times_passalong_followed <- c(random_times_passalong_followed, len_of_passalongs)
+}
+#turn vector into a dataframe for analysis
+rand_pass_.frame_2022G2 <- data.frame(random_times_passalong_followed)
+
+
+
+
+#opp
+masterframe_opp.df_2022G2 <- read_csv("opp2022G2countmaster_global_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_opp.df_2022G2$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_opp_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_opps <- length(which(masterframe_opp.df_2022G2$rule_followed == "yes" & 
+                                        masterframe_opp.df_2022G2$runIDs == j))
+random_times_opp_followed <- c(random_times_opp_followed, len_of_opps)
+}
+#turn vector into a dataframe for analysis
+rand_opp_.frame_2022G2 <- data.frame(random_times_opp_followed)
+
+
+#pun
+masterframe_pun.df_2022G2 <- read_csv("punishment2022G2countmaster_global_75perc.csv")
+
+#put run #s in an ascending vector
+cum_run_IDS <- unique(masterframe_pun.df_2022G2$runIDs)
+
+#create empty vector for number of time the motifs were executed to be stored
+random_times_pun_followed <- c()
+
+#put the number of times the motif was executed into the vector for analysis 
+for (j in cum_run_IDS) {
+  len_of_puns <- length(which(masterframe_pun.df_2022G2$rule_followed == "yes" & 
+                                        masterframe_pun.df_2022G2$runIDs == j))
+random_times_pun_followed <- c(random_times_pun_followed, len_of_puns)
+}
+#turn vector into a dataframe for analysis
+rand_pun_.frame_2022G2 <- data.frame(random_times_pun_followed)
+
+
+
+
+
+
+
+
+#make all column names consistent
+colnames(rand_retal_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_retal_.frame2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_retal_.frame2022G2)[1] <- 'count_of_rule_follows'
+colnames(rand_pile_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_pile_.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_pile_.frame_2022G2)[1] <- 'count_of_rule_follows'
+colnames(rand_pass_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_pass_.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_pass_.frame_2022G2)[1] <- 'count_of_rule_follows'
+colnames(rand_opp_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_opp_.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_opp_.frame_2022G2)[1] <- 'count_of_rule_follows'
+colnames(rand_pun_.frame)[1] <- 'count_of_rule_follows'
+colnames(rand_pun_.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(rand_pun_.frame_2022G2)[1] <- 'count_of_rule_follows'
+
+
+
+
+
+
+#bind all dfs containing the counts of motif execution from the randomized reference models. bind possible grouping factors
+tdr_count_rand_comb <- rbind(
+  cbind(rand_retal_.frame, Group = "Retalialtion Group 1", groupid = "Group 1", rule = "Retaliation"),
+  cbind(rand_retal_.frame2022G1, Group = "Retaliation Group 2", groupid = "Group 2", rule = "Retaliation"),
+  cbind(rand_retal_.frame2022G2, Group = "Retaliation Group 3", groupid = "Group 3", rule = "Retaliation"),
+  cbind(rand_pile_.frame, Group = "Pile-on Group 1", groupid = "Group 1", rule = "Pile-on"),  
+  cbind(rand_pile_.frame_2022G1, Group = "Pile-on Group 2", groupid = "Group 2", rule = "Pile-on"),
+  cbind(rand_pile_.frame_2022G2, Group = "Pile-on Group 3", groupid = "Group 3", rule = "Pile-on"),
+  cbind(rand_pass_.frame, Group = "Pass-along Group 1", groupid = "Group 1", rule = "Pass-along"),
+  cbind(rand_pass_.frame_2022G1, Group = "Pass-along Group 2", groupid = "Group 2", rule = "Pass-along"),
+  cbind(rand_pass_.frame_2022G2, Group = "Pass-along Group 3", groupid = "Group 3", rule = "Pass-along"),
+  cbind(rand_opp_.frame, Group = "Opportunism Group 1", groupid = "Group 1", rule = "Opportunism"),
+  cbind(rand_opp_.frame_2022G1, Group = "Opportunism Group 2", groupid = "Group 2", rule = "Opportunism"),
+  cbind(rand_opp_.frame_2022G2, Group = "Opportunism Group 3", groupid = "Group 3", rule = "Opportunism"),
+  cbind(rand_pun_.frame, Group = "Punishment Group 1", groupid = "Group 1", rule = "Punishment"),
+  cbind(rand_pun_.frame_2022G1, Group = "Punishment Group 2", groupid = "Group 2", rule = "Punishment"),
+  cbind(rand_pun_.frame_2022G2, Group = "Punishment Group 3", groupid = "Group 3", rule = "Punishment")
+
+)
+
+#write.csv(tdr_count_rand_comb,  "tdr_count_rand_comb_global_75_perc.csv", row.names = FALSE)
+
+
+
+
+#make all column names consistent
+colnames(retal_real.frame)[1] <- 'count_of_rule_follows'
+colnames(retal_real.frame2022G1)[1] <- 'count_of_rule_follows'
+colnames(retal_real.frame2022G2)[1] <- 'count_of_rule_follows'
+colnames(pile_real.frame_2021)[1] <- 'count_of_rule_follows'
+colnames(pile_real.frame_2022G1)[1] <- 'count_of_rule_follows'
+colnames(pile_real.frame_2022G2)[1] <- 'count_of_rule_follows'
+colnames(pass_along_real_frame_2021)[1] <- 'count_of_rule_follows'
+colnames(pass_along_real_2022G1_frame)[1] <- 'count_of_rule_follows'
+colnames(pass_along_real_2022G2_frame)[1] <- 'count_of_rule_follows'
+colnames(opp_real_2021_frame)[1] <- 'count_of_rule_follows'
+colnames(opp_real_2022G1_frame)[1] <- 'count_of_rule_follows'
+colnames(opp_real_2022G2_frame)[1] <- 'count_of_rule_follows'
+colnames(punishment_real_2021_frame)[1] <- 'count_of_rule_follows'
+colnames(punishment_real_2022G1_frame)[1] <- 'count_of_rule_follows'
+colnames(punishment_real_2022G2_frame)[1] <- 'count_of_rule_follows'
+
+# #bind all dfs containing the counts of motif execution from observed data. bind possible grouping factors
+tdr_count_real_comb<- rbind(
+  cbind(retal_real.frame, Group = "Retalialtion Group 1", groupid = "Group 1", rule = "Retaliation"),
+  cbind(retal_real.frame2022G1, Group = "Retaliation Group 2", groupid = "Group 2", rule = "Retaliation"),
+  cbind(retal_real.frame2022G2, Group = "Retaliation Group 3", groupid = "Group 3", rule = "Retaliation"),
+  cbind(pile_real.frame_2021, Group = "Pile-on Group 1", groupid = "Group 1", rule = "Pile-on"),  
+  cbind(pile_real.frame_2022G1, Group = "Pile-on Group 2", groupid = "Group 2", rule = "Pile-on"),
+  cbind(pile_real.frame_2022G2, Group = "Pile-on Group 3", groupid = "Group 3", rule = "Pile-on"),
+  cbind(pass_along_real_frame_2021, Group = "Pass-along Group 1", groupid = "Group 1", rule = "Pass-along"),
+  cbind(pass_along_real_2022G1_frame, Group = "Pass-along Group 2", groupid = "Group 2", rule = "Pass-along"),
+  cbind(pass_along_real_2022G2_frame, Group = "Pass-along Group 3", groupid = "Group 3", rule = "Pass-along"),
+  cbind(opp_real_2021_frame, Group = "Opportunism Group 1", groupid = "Group 1", rule = "Opportunism"),
+  cbind(opp_real_2022G1_frame, Group = "Opportunism Group 2", groupid = "Group 2", rule = "Opportunism"),
+  cbind(opp_real_2022G2_frame, Group = "Opportunism Group 3", groupid = "Group 3", rule = "Opportunism"),
+  cbind(punishment_real_2021_frame, Group = "Punishment Group 1", groupid = "Group 1", rule = "Punishment"),
+  cbind(punishment_real_2022G1_frame, Group = "Punishment Group 2", groupid = "Group 2", rule = "Punishment"),
+  cbind(punishment_real_2022G2_frame, Group = "Punishment Group 3", groupid = "Group 3", rule = "Punishment")
+
+)
+
+#write.csv(tdr_count_real_comb,  "tdr_count_real_comb_global_75_perc.csv", row.names = FALSE)
+
+
+
+```
+
+
+
+##Plot observed motif count compared to random violin and barplots
+```{r}
+
+#load randomized df
+tdr_count_rand_comb <- read_csv("tdr_count_rand_comb_global_75_perc.csv")
+
+
+#calculate means of randomized motif execution for each rule
+tdr_count_rand_comb_mean <- tdr_count_rand_comb  %>% group_by(groupid, rule) %>% summarise(mean_value = mean(count_of_rule_follows, na.rm = TRUE))
+
+
+
+
+
+#load observed df
+tdr_count_real_comb <- read_csv("tdr_count_real_comb_global_75_perc.csv")
+
+
+
+#set order in which rules should be displayed in the plot
+custom_order <- c("Retaliation","Pile-on",  "Pass-along", "Opportunism", "Punishment")
+tdr_count_rand_comb$rule <- factor(tdr_count_rand_comb$rule, levels = custom_order)
+
+tdr_count_real_comb$rule <- factor(tdr_count_real_comb$rule, levels = custom_order)
+
+#compressed violin version
+
+rule_order <- c("Retaliation","Pile-on","Pass-along","Opportunism","Punishment")
+# Use only rules that actually exist in data just in case but keep the specified order
+present_rules <- intersect(rule_order, unique(tdr_count_rand_comb$rule))
+groups <- sort(unique(tdr_count_rand_comb$groupid))
+
+#Build axis order with rules clustered together and then g1 g2 g3 of each 
+#makes it so goes through groups first then rules
+#looks like Retaliation – G1,G2,G3 | Pile-on – G1,G2,G3 | ...
+axis_order <- expand.grid(
+  groupid = groups,
+  rule    = present_rules,
+  KEEP.OUT.ATTRS = FALSE
+) |>
+  mutate(xcat = paste0(rule, "–", groupid)) |>
+  pull(xcat)
+#make sure only pulling out appropriate rules and groups
+
+tdr_rand2 <- tdr_count_rand_comb |>
+  filter(rule %in% present_rules, groupid %in% groups) |>
+  mutate(
+    rule = factor(rule, levels = present_rules),
+    xcat = factor(paste0(rule, "–", groupid), levels = axis_order)
+  )
+#same thing for observed motif execution
+tdr_real2 <- tdr_count_real_comb |>
+  filter(rule %in% present_rules, groupid %in% groups) |>
+  mutate(
+    rule = factor(rule, levels = present_rules),
+    xcat = factor(paste0(rule, "–", groupid), levels = axis_order)
+  )
+
+#create separator positions between rule blocks
+g_per_rule    <- length(groups)
+sep_positions <- (seq_len(length(present_rules) - 1) * g_per_rule) + 0.5
+
+rule_violin <- ggplot(tdr_rand2, aes(x = xcat, y = count_of_rule_follows)) +
+#separators behind violins
+geom_vline(xintercept = sep_positions, linetype = "dashed",
+             color = "grey60", linewidth = 0.8) +
+#randomized reference as gray violins
+geom_violin(fill = "grey70", color = "black", alpha = 1,
+              width = 0.9, trim = FALSE, scale = "width") +
+#mean bar across each violin
+   stat_summary(fun = mean, geom = "crossbar", width = 0.6,
+              color = "black", linewidth = 0.3)+
+#observed value as a red horizontal line across each category
+  geom_segment(
+    data = tdr_real2,
+    aes(x = as.numeric(xcat) - 0.35,
+        xend = as.numeric(xcat) + 0.35,
+        y = count_of_rule_follows,
+        yend = count_of_rule_follows),
+    inherit.aes = FALSE,
+    linewidth = 1.2, color = "red"
+  ) +
+  labs(
+    x = NULL,
+    y = "Count of motif execution", 
+    title = "Observed vs. randomized reference by rule and group (violin)"
+  ) +
+  theme_minimal(base_size = 20) +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.8),
+    axis.text.x  = element_text(angle = 45, hjust = 1),
+    axis.ticks.x = element_line()
+  )
+
+rule_violin
+#15 by 12 or 12 by 15
+
+
+
+
+
+
+
+
+
+#short bar plot to attach
+head(tdr_count_rand_comb_mean)
+head(tdr_count_real_comb)
+
+
+tdr_count_both_comb <- tdr_count_rand_comb_mean %>%
+  left_join(tdr_count_real_comb, by = c("groupid", "rule"))
+#obtain the difference between observed count and the mean of the reference distribution
+tdr_count_both_comb$dif <- tdr_count_both_comb$count_of_rule_follows - tdr_count_both_comb$mean_value
+
+
+
+rule_order <- c("Retaliation","Pile-on","Pass-along","Opportunism","Punishment")
+# Use only rules that actually exist in data just in case but keep the specified order
+present_rules <- intersect(rule_order, unique(tdr_count_both_comb$rule))
+groups <- sort(unique(tdr_count_both_comb$groupid))
+
+#Build axis order with rules clustered together and then g1 g2 g3 of each 
+#makes it so goes through groups first then rules
+#looks like Retaliation – G1,G2,G3 | Pile-on – G1,G2,G3 | ...
+axis_order <- expand.grid(
+  groupid = groups,
+  rule    = present_rules,
+  KEEP.OUT.ATTRS = FALSE
+) |>
+  mutate(xcat = paste0(rule, "–", groupid)) |>
+  pull(xcat)
+#make sure only pulling out appropriate rules and groups
+
+tdr_count_both_comb2 <- tdr_count_both_comb |>
+  filter(rule %in% present_rules, groupid %in% groups) |>
+  mutate(
+    rule = factor(rule, levels = present_rules),
+    xcat = factor(paste0(rule, "–", groupid), levels = axis_order)
+  )
+
+#create separator positions between rule blocks
+g_per_rule    <- length(groups)
+sep_positions <- (seq_len(length(present_rules) - 1) * g_per_rule) + 0.5
+
+
+
+rule_bar <- ggplot(tdr_count_both_comb2, aes(x = xcat, y = dif)) +
+  #separators behind bars
+  geom_vline(xintercept = sep_positions, linetype = "dashed",
+             color = "grey60", linewidth = 0.8) +
+  #bars from supplied y
+  geom_col(fill = "grey60", color = "black") +
+  labs(
+    x = NULL,
+    y = "Count of motif execution",
+    title = "Observed vs. randomized reference by rule and group (bar)"
+  ) +
+  theme_minimal(base_size = 20) +
+  scale_y_continuous(limits = c(-450, 100)) +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.8),
+    axis.text.x  = element_text(angle = 90, hjust = 1),
+    axis.ticks.x = element_line()
+  )
+
+rule_bar
+
+
+
+
+
+#keep the top plot as is visually, just hide its x label ticks so they don't repeat
+rule_violin_top <- rule_violin +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x  = element_blank(),
+    axis.ticks.x = element_blank(),
+    plot.margin  = margin(5.5, 5.5, 0, 5.5) 
+  )
+
+#keep bar plot exactly as is but tweak bottom margin
+rule_bar_bottom <- rule_bar +
+  theme(
+    plot.margin = margin(0, 5.5, 5.5, 5.5)
+  )
+
+#stack two plots together. The violins on top (bigger), bars below (smaller)
+combined <- rule_violin_top / rule_bar_bottom +
+  plot_layout(heights = c(2, 1), guides = "keep")
+
+combined
+#12 by 10
+
+#P values added manually in inkscape for easier formatting
+
+```
+
+
+
+
