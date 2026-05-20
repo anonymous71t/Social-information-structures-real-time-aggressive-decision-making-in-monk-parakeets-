@@ -1,3 +1,5 @@
 Rule motif detection script for 2022G1 (group 2)
 
+These scripts detect the observed and randomized count (individual and group) and execution speed for each rule in question's response motif. Scripts are set to the threshold defined by the 95% confidence interval of each rule motif's execution speed distribution (described in detail in manuscript) but can be changed by adjusting the appropriate rule detection loop condition as well as the permutation seed (listed in script). To recalulate each rule motif's detection threshold each script must be run up to and including the "Calculate Observed RULE (interval = 4 thresholds)" code chunk. Thresholds can then be recalculated in the Plots and stats Groups 1-3 script.
+
 
